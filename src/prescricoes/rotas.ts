@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import { z } from "zod";
 import { db, novoId } from "../compartilhado/dados.js";
-import { exige } from "../acesso/politica.js";
-import { NotFoundError } from "../compartilhado/erros.js";
+import { autenticada, exige } from "../acesso/politica.js";
+import { ForbiddenError, NotFoundError } from "../compartilhado/erros.js";
 
 const NovaPrescricao = z.object({
   medicamento: z.string().min(2),
@@ -25,5 +25,15 @@ export function registrar(app: Express) {
     const m = { id: novoId("m"), atendimentoId: e.id, ...dados };
     db.prescricoes.push(m);
     res.status(201).json(m);
+  });
+
+  // Relatório: prescrições por profissional. VERSÃO INGÊNUA (cap11-antes).
+  app.get("/api/reports/prescriptions", autenticada(), (req, res) => {
+    if (!["admin", "profissional"].includes(req.usuario!.papel))
+      throw new ForbiddenError();
+    const porProfissional: Record<string, number> = {};
+    for (const m of db.prescricoes)
+      porProfissional[m.profissionalId] = (porProfissional[m.profissionalId] ?? 0) + 1;
+    res.json(porProfissional);
   });
 }

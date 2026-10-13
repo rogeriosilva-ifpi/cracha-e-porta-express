@@ -311,3 +311,10 @@ Content-Type: application/json
 ### ATQ-08.4 · volta do provedor aceita sem state
 # @espera status=400
 GET {{base}}/api/auth/oidc/callback?code=qualquer
+
+# --- capítulo 11 · funções administrativas -------------------------
+
+### ATQ-11.1 · recepção usa a função administrativa de desligar alguém
+# @espera status=403
+# @sessao carla
+POST {{base}}/api/admin/users/u3/desligar

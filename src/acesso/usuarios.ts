@@ -34,6 +34,9 @@ export const usuarios = {
       .run(u.id, u.nome, u.email.toLowerCase(), u.papel, u.passwordHash);
     return u;
   },
+  trocarPapel(id: string, papel: Papel) {
+    banco.prepare("UPDATE usuarios SET papel = ? WHERE id = ?").run(papel, id);
+  },
   trocarHash(id: string, hash: string) {
     banco.prepare("UPDATE usuarios SET password_hash = ? WHERE id = ?").run(hash, id);
   },
