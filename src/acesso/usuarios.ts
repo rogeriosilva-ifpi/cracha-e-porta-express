@@ -1,6 +1,7 @@
 // Repositório de usuários. Toda consulta é parametrizada (?).
 import { banco } from "../compartilhado/banco.js";
 import type { Papel } from "../compartilhado/dados.js";
+import argon2 from "argon2";
 import { hashSenha } from "./senhas.js";
 
 export interface Usuario {
@@ -10,6 +11,8 @@ export interface Usuario {
 type Linha = Omit<Usuario, "passwordHash"> & { password_hash: string };
 const deLinha = ({ password_hash, ...u }: Linha): Usuario =>
   ({ ...u, passwordHash: password_hash });
+
+export const publico = ({ passwordHash: _, ...u }: Usuario) => u;
 
 export const usuarios = {
   porEmail(email: string) {
@@ -52,6 +55,13 @@ const SEMENTE: Omit<Usuario, "passwordHash">[] = [
 ];
 
 if ((banco.prepare("SELECT COUNT(*) AS n FROM usuarios").get() as { n: number }).n === 0) {
-  for (const u of SEMENTE)
-    usuarios.criar({ ...u, passwordHash: await hashSenha(SENHAS_DE_LABORATORIO[u.email]!) });
+  for (const u of SEMENTE) {
+    const senha = SENHAS_DE_LABORATORIO[u.email]!;
+    // Bruno foi cadastrado num sistema antigo, com parâmetros fracos:
+    // o login dele mostra o rehash transparente (capítulo 4).
+    const hash = u.id === "u3"
+      ? await argon2.hash(senha, { type: argon2.argon2id, memoryCost: 4096, timeCost: 1, parallelism: 1 })
+      : await hashSenha(senha);
+    usuarios.criar({ ...u, passwordHash: hash });
+  }
 }

@@ -1,0 +1,21 @@
+# Lista de bloqueio (NIST SP 800-63B-4): senhas comuns, vazadas ou
+# ligadas ao contexto do serviço. Em produção, use uma lista grande de
+# senhas vazadas; esta é uma amostra de laboratório.
+123456789012345
+1234567890123456
+12345678901234567890
+000000000000000
+111111111111111
+qwertyuiopasdfg
+qwertyuiopasdfgh
+senhasenhasenha
+senhasenhasenha1
+senha12345678910
+passwordpassword
+password12345678
+iloveyouiloveyou
+abcdefghijklmno
+mudar123mudar123
+prontuario12345
+prontuario2026!!
+hospital12345678
