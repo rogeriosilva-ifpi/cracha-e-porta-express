@@ -12,3 +12,6 @@ npm test                  # vitest + supertest
 npm run censo             # rotas e políticas
 python placar.py ataques.http
 ```
+
+`prompts/` traz os prompts complementares de cada capítulo (variante
+C-P-T-R-F-A e revisão). Leia na branch principal.
