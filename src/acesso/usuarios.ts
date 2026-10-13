@@ -45,13 +45,17 @@ export const SENHAS_DE_LABORATORIO: Record<string, string> = {
   "ana@hospital.dev": "cajueiro-em-flor-no-quintal",
   "bruno@hospital.dev": "barco-azul-no-delta",
   "carla@hospital.dev": "rede-na-varanda-de-tarde",
+  "eva@hospital.dev": "mangueira-no-fim-da-rua",
 };
+// Segredo TOTP de LABORATÓRIO da Dra. Eva (capítulo 8), no README.
+export const TOTP_DE_LABORATORIO = "5SCWGB6S2EW3ODL6YVCBVS4HUJDGETQJ";
 
 const SEMENTE: Omit<Usuario, "passwordHash">[] = [
   { id: "u1", nome: "Admin Geral", email: "admin@hospital.dev", papel: "admin" },
   { id: "u2", nome: "Dra. Ana", email: "ana@hospital.dev", papel: "profissional" },
   { id: "u3", nome: "Dr. Bruno", email: "bruno@hospital.dev", papel: "profissional" },
   { id: "u4", nome: "Carla", email: "carla@hospital.dev", papel: "recepcao" },
+  { id: "u5", nome: "Dra. Eva", email: "eva@hospital.dev", papel: "profissional" },
 ];
 
 if ((banco.prepare("SELECT COUNT(*) AS n FROM usuarios").get() as { n: number }).n === 0) {
@@ -64,4 +68,8 @@ if ((banco.prepare("SELECT COUNT(*) AS n FROM usuarios").get() as { n: number })
       : await hashSenha(senha);
     usuarios.criar({ ...u, passwordHash: hash });
   }
+  // Eva já usa segundo fator; Ana tem login federado vinculado (cap. 8).
+  banco.prepare("INSERT INTO mfa VALUES ('u5', ?, 1, 0)").run(TOTP_DE_LABORATORIO);
+  banco.prepare("INSERT INTO identidades_externas VALUES (?, 'ana-no-provedor', 'u2')")
+    .run(process.env.OIDC_ISSUER ?? "http://localhost:8080/realms/hospital");
 }

@@ -38,4 +38,35 @@ banco.exec(`
     expira_em  INTEGER NOT NULL,
     usado      INTEGER NOT NULL DEFAULT 0
   );
+  CREATE TABLE IF NOT EXISTS mfa (
+    usuario_id   TEXT PRIMARY KEY,
+    segredo      TEXT NOT NULL,      -- base32 (cap. 13: cifrar em repouso)
+    ativo        INTEGER NOT NULL DEFAULT 0,
+    ultimo_passo INTEGER NOT NULL DEFAULT 0  -- código não vale duas vezes
+  );
+  CREATE TABLE IF NOT EXISTS codigos_recuperacao (
+    hash       TEXT PRIMARY KEY,     -- sha256 do código
+    usuario_id TEXT NOT NULL,
+    usado      INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE TABLE IF NOT EXISTS desafios_mfa (
+    hash       TEXT PRIMARY KEY,     -- sha256 do desafio
+    usuario_id TEXT NOT NULL,
+    canal      TEXT NOT NULL,        -- "cookie" ou "token"
+    expira_em  INTEGER NOT NULL,
+    tentativas INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE TABLE IF NOT EXISTS oidc_pedidos (
+    state_hash  TEXT PRIMARY KEY,
+    nonce       TEXT NOT NULL,
+    verificador TEXT NOT NULL,       -- PKCE code_verifier
+    expira_em   INTEGER NOT NULL,
+    usado       INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE TABLE IF NOT EXISTS identidades_externas (
+    emissor    TEXT NOT NULL,
+    sub        TEXT NOT NULL,
+    usuario_id TEXT NOT NULL,
+    PRIMARY KEY (emissor, sub)
+  );
 `);

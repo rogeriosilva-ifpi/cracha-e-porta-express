@@ -284,3 +284,30 @@ POST {{base}}/api/auth/refresh
 Content-Type: application/json
 
 {"refresh_token": "{{rt3}}"}
+
+# --- capítulo 8 · segundo fator e login federado ---------------------
+
+### ATQ-08.1 · senha certa de quem tem MFA já abre a sessão
+# @espera status=200 contem=desafio cab=set-cookie!~__Host-sessao
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "eva@hospital.dev", "senha": "mangueira-no-fim-da-rua"}
+
+### ATQ-08.2 · cliente de API de quem tem MFA recebe token só com a senha
+# @espera status=200 contem=desafio sem=access_token
+POST {{base}}/api/auth/token
+Content-Type: application/json
+
+{"email": "eva@hospital.dev", "senha": "mangueira-no-fim-da-rua"}
+
+### ATQ-08.3 · desafio inventado aceito no segundo passo
+# @espera status=401
+POST {{base}}/api/auth/mfa/verificar
+Content-Type: application/json
+
+{"desafio": "inventado", "codigo": "000000"}
+
+### ATQ-08.4 · volta do provedor aceita sem state
+# @espera status=400
+GET {{base}}/api/auth/oidc/callback?code=qualquer
