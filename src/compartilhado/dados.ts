@@ -1,10 +1,10 @@
-// Dados em memória do Mini-Prontuário. O banco entra no capítulo 3.
+// Dados em memória do Mini-Prontuário. O banco entra no capítulo 4.
 export type Papel = "admin" | "profissional" | "recepcao";
 
 export interface Usuario {
   id: string; nome: string; email: string;
   papel: Papel;
-  passwordHash: string; // hash ilustrativo; os reais nascem no cap. 3
+  passwordHash: string; // hash ilustrativo; os reais nascem no cap. 4
 }
 export interface Paciente { id: string; nome: string; cns: string; nascimento: string }
 export interface Atendimento {

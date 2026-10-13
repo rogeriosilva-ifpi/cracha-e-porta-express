@@ -1,35 +1,26 @@
-# Capítulo 2 · Onde a identidade viaja — prompts complementares
-
-## Agente · versão FastAPI
-
-```
-Goal
-GET /api/patients/{id}/encounters: lista os atendimentos de um paciente.
-
-Context
-@src/prontuario/atendimentos/ @src/prontuario/acesso/
-@INVARIANTES.md @docs/PERMISSOES.md
-
-Constraints
-- dependencies=[Depends(exige("encounter:read"))]; nunca publica();
-  sem permissão nova
-- 404 via NotFoundError; sem bibliotecas novas
-- fora de escopo: filtrar por profissional (capítulo 11)
-
-Done when
-- uv run pytest verde (censo incluído)
-- uv run python scripts/censo.py: rota nova, 0 problemas
-- teste novo: sem crachá 401; recepção 200
-```
+# Capítulo 2 · Criptografia sem medo — prompts complementares
 
 ## Chat · C-P-T-R-F-A
 
 ```
-C  Express 5 + TS. Colo abaixo politica.ts e src/atendimentos/rotas.ts.
-P  Dev sênior de backend.
-T  Escreva só o handler da rota GET /api/patients/:id/encounters.
-R  Primeiro middleware exige("encounter:read"); erros só por throw das
-   classes de erros.ts; sem bibliotecas novas.
-F  Só o trecho app.get(...), comentado em português.
-A  npm run censo sem problemas.
+C  Node 22 + TypeScript (ou Python 3.12+). Só biblioteca padrão:
+   node:crypto (ou secrets, hashlib, hmac).
+P  Dev sênior de backend com foco em segurança.
+T  Escreva gerarCodigoConvite(): string, um código de convite de uso
+   único para cadastrar profissionais.
+R  Use gerador criptográfico (randomBytes / secrets), nunca
+   Math.random ou random. Pelo menos 32 bytes de entropia. Formato
+   base64url. Sem bibliotecas externas.
+F  Só a função e um teste, comentados em português.
+A  Dois códigos gerados em sequência nunca são iguais; o teste roda.
+```
+
+## Revisão · contexto novo
+
+```
+Procure no repositório, com grep, todo uso de Math.random, random.,
+md5, sha1, sha256 aplicado a senha, comparação de segredo com == ou
+===, e Buffer/base64 tratado como proteção. Para cada ocorrência:
+arquivo:linha, por que é risco e a ferramenta certa do capítulo 2.
+Não altere arquivos.
 ```

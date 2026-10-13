@@ -5,7 +5,7 @@ import { criarApp } from "../src/app.js";
 const app = criarApp();
 const como = (email: string) => ({ "X-Usuario-Demo": email });
 
-describe("pipeline do capítulo 2", () => {
+describe("pipeline do capítulo 3", () => {
   it("rota pública responde sem crachá", async () => {
     await request(app).get("/health").expect(200);
   });

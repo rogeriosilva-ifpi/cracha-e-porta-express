@@ -14,6 +14,6 @@ muda lá, no mesmo commit.
 | `rx:create`        |  ❌   |      ✅      |    ❌    |
 | `user:admin`       |  ✅   |      ❌      |    ❌    |
 
-Regra de domínio (portão 3, capítulo 11): o profissional só prescreve
+Regra de domínio (portão 3, capítulo 12): o profissional só prescreve
 no atendimento que ele mesmo registrou. Nenhuma linha desta tabela
 expressa isso — e é por isso que ela não basta.

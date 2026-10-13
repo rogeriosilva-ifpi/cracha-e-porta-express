@@ -5,6 +5,7 @@ Laboratório do ebook **Crachá & Porta** — stack Express 5 + TypeScript.
 Cada capítulo é uma tag: `git checkout cap01`, `git checkout cap02`…
 
 ```bash
+npx tsx laboratorio/cripto.ts     # capítulo 2
 npm install
 npm start                 # :3000
 npm run check             # tsc --noEmit
