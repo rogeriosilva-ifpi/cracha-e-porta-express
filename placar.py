@@ -4,7 +4,7 @@
 uso: python placar.py ataques.http [--base URL] [-v]
 
 Cada bloco começa com "### ID · descrição" e pode ter uma linha
-"# @espera status=401|404 sem=texto contem=texto cab=Nome~texto".
+"# @espera status=401|404 status!=403 sem=texto contem=texto cab=Nome~texto".
 "# @sessao nome" guarda e reenvia os cookies daquela sessão;
 "# @guarda var=campo" guarda um campo do JSON da resposta em {{var}}.
 Expectativas jwt-* leem o access_token da resposta (sem conferir
@@ -85,6 +85,8 @@ def avaliar(espera, status, corpo, cabecalhos):
         chave, _, valor = e.partition("=")
         if chave == "status":
             ok &= str(status) in valor.split("|")
+        elif chave == "status!":          # status!=401|403: qualquer um, menos esses
+            ok &= str(status) not in valor.split("|")
         elif chave == "sem":
             ok &= valor not in corpo
         elif chave == "contem":
@@ -128,7 +130,8 @@ def main():
             continue
         ok = avaliar(espera, status, corpo, cabs)
         total += 1; defendidos += ok
-        esp = next((e.split("=")[1] for e in espera if e.startswith("status=")), "-")
+        esp = next((e.split("=")[1] for e in espera if e.startswith("status=")),
+                   next(("≠" + e.split("=")[1] for e in espera if e.startswith("status!=")), "-"))
         print(f"{ident.replace('ATQ-',''):<8}{esp:<12}{status:<8}{'defendido' if ok else 'VULNERÁVEL'}")
         if a.v:
             print(f"        {desc}")

@@ -1,0 +1,258 @@
+# matriz.http — GERADO por matriz.py. Não edite à mão.
+@base = http://localhost:3000
+
+### PREPARAÇÃO · login recepcao
+# @sessao m-recepcao
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "carla@hospital.dev", "senha": "rede-na-varanda-de-tarde"}
+
+### PREPARAÇÃO · login profissional
+# @sessao m-profissional
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### PREPARAÇÃO · login admin
+# @sessao m-admin
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "admin@hospital.dev", "senha": "farol-de-amarracao-2026"}
+
+### MTZ-01 · recepcao pode GET /api/patients (patient:read)
+# @espera status!=401|403
+# @sessao m-recepcao
+GET {{base}}/api/patients
+
+### MTZ-02 · recepcao pode GET /api/patients/:id (patient:read)
+# @espera status!=401|403
+# @sessao m-recepcao
+GET {{base}}/api/patients/p1
+
+### MTZ-03 · recepcao pode POST /api/patients (patient:create)
+# @espera status!=401|403
+# @sessao m-recepcao
+POST {{base}}/api/patients
+Content-Type: application/json
+
+{}
+
+### MTZ-04 · recepcao pode GET /api/encounters/:id (encounter:read)
+# @espera status!=401|403
+# @sessao m-recepcao
+GET {{base}}/api/encounters/e1
+
+### MTZ-05 · recepcao não pode PATCH /api/encounters/:id (encounter:update)
+# @espera status=403
+# @sessao m-recepcao
+PATCH {{base}}/api/encounters/e1
+Content-Type: application/json
+
+{}
+
+### MTZ-06 · recepcao não pode GET /api/medication-requests (rx:read)
+# @espera status=403
+# @sessao m-recepcao
+GET {{base}}/api/medication-requests
+
+### MTZ-07 · recepcao não pode POST /api/encounters/:id/medication-requests (rx:create)
+# @espera status=403
+# @sessao m-recepcao
+POST {{base}}/api/encounters/e1/medication-requests
+Content-Type: application/json
+
+{}
+
+### MTZ-08 · recepcao não pode GET /api/reports/prescriptions (rx:read)
+# @espera status=403
+# @sessao m-recepcao
+GET {{base}}/api/reports/prescriptions
+
+### MTZ-09 · recepcao não pode GET /api/admin/users (user:admin)
+# @espera status=403
+# @sessao m-recepcao
+GET {{base}}/api/admin/users
+
+### MTZ-10 · recepcao não pode POST /api/admin/users (user:admin)
+# @espera status=403
+# @sessao m-recepcao
+POST {{base}}/api/admin/users
+Content-Type: application/json
+
+{}
+
+### MTZ-11 · recepcao não pode POST /api/admin/users/:id/desligar (user:admin)
+# @espera status=403
+# @sessao m-recepcao
+POST {{base}}/api/admin/users/u3/desligar
+Content-Type: application/json
+
+{}
+
+### MTZ-12 · recepcao não pode PATCH /api/admin/users/:id/papel (user:admin)
+# @espera status=403
+# @sessao m-recepcao
+PATCH {{base}}/api/admin/users/u3/papel
+Content-Type: application/json
+
+{}
+
+### MTZ-13 · profissional pode GET /api/patients (patient:read)
+# @espera status!=401|403
+# @sessao m-profissional
+GET {{base}}/api/patients
+
+### MTZ-14 · profissional pode GET /api/patients/:id (patient:read)
+# @espera status!=401|403
+# @sessao m-profissional
+GET {{base}}/api/patients/p1
+
+### MTZ-15 · profissional pode POST /api/patients (patient:create)
+# @espera status!=401|403
+# @sessao m-profissional
+POST {{base}}/api/patients
+Content-Type: application/json
+
+{}
+
+### MTZ-16 · profissional pode GET /api/encounters/:id (encounter:read)
+# @espera status!=401|403
+# @sessao m-profissional
+GET {{base}}/api/encounters/e1
+
+### MTZ-17 · profissional pode PATCH /api/encounters/:id (encounter:update)
+# @espera status!=401|403
+# @sessao m-profissional
+PATCH {{base}}/api/encounters/e1
+Content-Type: application/json
+
+{}
+
+### MTZ-18 · profissional pode GET /api/medication-requests (rx:read)
+# @espera status!=401|403
+# @sessao m-profissional
+GET {{base}}/api/medication-requests
+
+### MTZ-19 · profissional pode POST /api/encounters/:id/medication-requests (rx:create)
+# @espera status!=401|403
+# @sessao m-profissional
+POST {{base}}/api/encounters/e1/medication-requests
+Content-Type: application/json
+
+{}
+
+### MTZ-20 · profissional pode GET /api/reports/prescriptions (rx:read)
+# @espera status!=401|403
+# @sessao m-profissional
+GET {{base}}/api/reports/prescriptions
+
+### MTZ-21 · profissional não pode GET /api/admin/users (user:admin)
+# @espera status=403
+# @sessao m-profissional
+GET {{base}}/api/admin/users
+
+### MTZ-22 · profissional não pode POST /api/admin/users (user:admin)
+# @espera status=403
+# @sessao m-profissional
+POST {{base}}/api/admin/users
+Content-Type: application/json
+
+{}
+
+### MTZ-23 · profissional não pode POST /api/admin/users/:id/desligar (user:admin)
+# @espera status=403
+# @sessao m-profissional
+POST {{base}}/api/admin/users/u3/desligar
+Content-Type: application/json
+
+{}
+
+### MTZ-24 · profissional não pode PATCH /api/admin/users/:id/papel (user:admin)
+# @espera status=403
+# @sessao m-profissional
+PATCH {{base}}/api/admin/users/u3/papel
+Content-Type: application/json
+
+{}
+
+### MTZ-25 · admin pode GET /api/patients (patient:read)
+# @espera status!=401|403
+# @sessao m-admin
+GET {{base}}/api/patients
+
+### MTZ-26 · admin pode GET /api/patients/:id (patient:read)
+# @espera status!=401|403
+# @sessao m-admin
+GET {{base}}/api/patients/p1
+
+### MTZ-27 · admin pode POST /api/patients (patient:create)
+# @espera status!=401|403
+# @sessao m-admin
+POST {{base}}/api/patients
+Content-Type: application/json
+
+{}
+
+### MTZ-28 · admin pode GET /api/encounters/:id (encounter:read)
+# @espera status!=401|403
+# @sessao m-admin
+GET {{base}}/api/encounters/e1
+
+### MTZ-29 · admin pode PATCH /api/encounters/:id (encounter:update)
+# @espera status!=401|403
+# @sessao m-admin
+PATCH {{base}}/api/encounters/e1
+Content-Type: application/json
+
+{}
+
+### MTZ-30 · admin pode GET /api/medication-requests (rx:read)
+# @espera status!=401|403
+# @sessao m-admin
+GET {{base}}/api/medication-requests
+
+### MTZ-31 · admin não pode POST /api/encounters/:id/medication-requests (rx:create)
+# @espera status=403
+# @sessao m-admin
+POST {{base}}/api/encounters/e1/medication-requests
+Content-Type: application/json
+
+{}
+
+### MTZ-32 · admin pode GET /api/reports/prescriptions (rx:read)
+# @espera status!=401|403
+# @sessao m-admin
+GET {{base}}/api/reports/prescriptions
+
+### MTZ-33 · admin pode GET /api/admin/users (user:admin)
+# @espera status!=401|403
+# @sessao m-admin
+GET {{base}}/api/admin/users
+
+### MTZ-34 · admin pode POST /api/admin/users (user:admin)
+# @espera status!=401|403
+# @sessao m-admin
+POST {{base}}/api/admin/users
+Content-Type: application/json
+
+{}
+
+### MTZ-35 · admin pode POST /api/admin/users/:id/desligar (user:admin)
+# @espera status!=401|403
+# @sessao m-admin
+POST {{base}}/api/admin/users/u3/desligar
+Content-Type: application/json
+
+{}
+
+### MTZ-36 · admin pode PATCH /api/admin/users/:id/papel (user:admin)
+# @espera status!=401|403
+# @sessao m-admin
+PATCH {{base}}/api/admin/users/u3/papel
+Content-Type: application/json
+
+{}
+

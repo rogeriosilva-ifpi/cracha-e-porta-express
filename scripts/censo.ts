@@ -2,6 +2,10 @@ import { criarApp } from "../src/app.js";
 import { levantar, problemas } from "../src/acesso/censo.js";
 
 const linhas = levantar(criarApp());
+if (process.argv.includes("--json")) {   // para o matriz.py (cap. 11)
+  console.log(JSON.stringify(linhas));
+  process.exit(0);
+}
 for (const { metodo, caminho, politica } of linhas) {
   const p = !politica ? "— NENHUMA —" : "publica" in politica ? "pública"
     : "autenticada" in politica ? "autenticada" : politica.permissao;

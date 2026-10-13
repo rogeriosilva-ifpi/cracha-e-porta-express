@@ -84,3 +84,12 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
 - **SEC-26** Toda regra de acesso tem uma tabela de casos
   (`politicas/casos.json`) que roda nas duas stacks e contra cada
   implementação (código e Cedar). *Cap. 10 · prova: testes tabulares.*
+- **SEC-27** Toda rota fora de `/api/auth/*` declara uma permissão da
+  matriz; "basta estar logado" não vale para função de domínio nem de
+  administração. Nada de `if (papel === ...)` no handler.
+  *Cap. 11 · prova: censo e ATQ-11.1.*
+- **SEC-28** A suíte papel × rota (`matriz.http`) é gerada da matriz e
+  do censo por `matriz.py` e roda a cada mudança: cada combinação sem
+  permissão recebe 403. *Cap. 11 · prova: matriz 36/36.*
+- **SEC-29** Troca de papel e desligamento derrubam sessões e apps da
+  pessoa e geram evento. *Cap. 11 · prova: testes de funções admin.*

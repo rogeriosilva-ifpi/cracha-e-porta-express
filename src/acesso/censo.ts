@@ -37,6 +37,9 @@ export function problemas(linhas: Linha[]): string[] {
     if (!politica) return [`${rota}: sem política declarada`];
     if ("publica" in politica && !PUBLICAS.has(rota))
       return [`${rota}: pública sem estar em PUBLICAS`];
+    // "Basta estar logado" só vale para a própria conta (cap. 11).
+    if ("autenticada" in politica && !caminho.startsWith("/api/auth/"))
+      return [`${rota}: só autenticada; declare uma permissão`];
     return [];
   });
 }

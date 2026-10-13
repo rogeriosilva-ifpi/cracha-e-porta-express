@@ -54,3 +54,10 @@ usam um provedor falso dentro da suíte.
 `laboratorio/modelos` roda os 7 casos de `politicas/casos.json` contra
 RBAC, RBAC com posse, ABAC e Cedar. As políticas Rego (OPA) e o modelo
 OpenFGA de `politicas/` rodam com Docker; veja `politicas/README.md`.
+
+## Matriz de permissões (capítulo 11)
+
+```bash
+python matriz.py rotas.json docs/PERMISSOES.md > matriz.http   # ver matriz.py
+python placar.py matriz.http                                   # papel × rota
+```
