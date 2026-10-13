@@ -3,7 +3,7 @@
 import type { RequestHandler } from "express";
 import type { Usuario } from "./usuarios.js";
 import { ForbiddenError, UnauthorizedError } from "../compartilhado/erros.js";
-import { identificar } from "./cracha-provisorio.js";
+import { identificar } from "./sessoes.js";
 import { pode, type Permissao } from "./permissoes.js";
 
 declare global {
@@ -11,13 +11,23 @@ declare global {
 }
 
 export const MARCA = Symbol("politica");
-export type Politica = { publica: true } | { permissao: Permissao };
+export type Politica =
+  | { publica: true } | { autenticada: true } | { permissao: Permissao };
 export type Marcado = RequestHandler & { [MARCA]: Politica };
 
 const marcar = (h: RequestHandler, p: Politica) =>
   Object.assign(h, { [MARCA]: p }) as Marcado;
 
 export const publica = () => marcar((_req, _res, next) => next(), { publica: true });
+
+// Basta estar logado (ex.: logout, "quem sou eu").
+export const autenticada = () =>
+  marcar((req, _res, next) => {
+    const usuario = identificar(req);
+    if (!usuario) throw new UnauthorizedError();
+    req.usuario = usuario;
+    next();
+  }, { autenticada: true });
 
 export const exige = (permissao: Permissao) =>
   marcar((req, _res, next) => {

@@ -3,7 +3,8 @@ import { levantar, problemas } from "../src/acesso/censo.js";
 
 const linhas = levantar(criarApp());
 for (const { metodo, caminho, politica } of linhas) {
-  const p = !politica ? "— NENHUMA —" : "publica" in politica ? "pública" : politica.permissao;
+  const p = !politica ? "— NENHUMA —" : "publica" in politica ? "pública"
+    : "autenticada" in politica ? "autenticada" : politica.permissao;
   const linha = `${metodo.padEnd(6)} ${caminho}`;
   // cabe em 46 colunas? política na mesma linha; senão, embaixo
   console.log(linha.length <= 28

@@ -1,8 +1,37 @@
 # ataques.http — suíte de ataques compartilhada pelas duas stacks.
 # Rode no VS Code (REST Client) ou com: python placar.py ataques.http
 # "# @espera" descreve o comportamento SEGURO. Se o servidor não se
-# comportar assim, o ataque funcionou.
+# comportar assim, o ataque funcionou. Desde o capítulo 5, cada papel
+# entra com login de verdade; "# @sessao" guarda o cookie de cada um.
 @base = http://localhost:3000
+
+### PREPARAÇÃO · login de cada papel
+# @sessao admin
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "admin@hospital.dev", "senha": "farol-de-amarracao-2026"}
+
+### PREPARAÇÃO
+# @sessao ana
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### PREPARAÇÃO
+# @sessao bruno
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "bruno@hospital.dev", "senha": "barco-azul-no-delta"}
+
+### PREPARAÇÃO
+# @sessao carla
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "carla@hospital.dev", "senha": "rede-na-varanda-de-tarde"}
 
 ### ATQ-01.1 · sem crachá, lista pacientes
 # @espera status=401
@@ -25,29 +54,29 @@ Content-Type: application/json
 
 ### ATQ-01.5 · recepção lê prescrições
 # @espera status=403
+# @sessao carla
 GET {{base}}/api/medication-requests
-X-Usuario-Demo: carla@hospital.dev
 
 ### ATQ-01.6 · recepção prescreve
 # @espera status=403
+# @sessao carla
 POST {{base}}/api/encounters/e1/medication-requests
-X-Usuario-Demo: carla@hospital.dev
 Content-Type: application/json
 
 {"medicamento": "Morfina 10 mg", "posologia": "4/4h", "profissionalId": "u2"}
 
 ### ATQ-01.7 · admin prescreve (nem admin pode)
 # @espera status=403
+# @sessao admin
 POST {{base}}/api/encounters/e1/medication-requests
-X-Usuario-Demo: admin@hospital.dev
 Content-Type: application/json
 
 {"medicamento": "Morfina 10 mg", "posologia": "4/4h", "profissionalId": "u1"}
 
 ### ATQ-01.8 · recepção lista usuários
 # @espera status=403
+# @sessao carla
 GET {{base}}/api/admin/users
-X-Usuario-Demo: carla@hospital.dev
 
 ### ATQ-01.9 · rota de debug esquecida
 # @espera status=401|404
@@ -55,41 +84,41 @@ GET {{base}}/api/debug/dump
 
 ### ATQ-01.10 · JSON malformado vaza a pilha
 # @espera status=400|422 sem=node_modules sem=Traceback
+# @sessao ana
 POST {{base}}/api/patients
-X-Usuario-Demo: ana@hospital.dev
 Content-Type: application/json
 
 {"nome": "Teste",
 
-### ATQ-01.11 · crachá de papelão forjado
+### ATQ-01.11 · crachá de papelão forjado (cabeçalho inventado)
 # @espera status=401
 GET {{base}}/api/admin/users
 X-Usuario-Demo: admin@hospital.dev
 
 ### ATQ-01.12 · Bruno lê o atendimento de Ana
 # @espera status=403|404
+# @sessao bruno
 GET {{base}}/api/encounters/e1
-X-Usuario-Demo: bruno@hospital.dev
 
 ### ATQ-01.13 · hash de senha na resposta
 # @espera sem=passwordHash
+# @sessao admin
 GET {{base}}/api/admin/users
-X-Usuario-Demo: admin@hospital.dev
 
 # ---------------------------------------------------------- capítulo 4
 
 ### ATQ-04.1 · admin cria usuário com senha curta
 # @espera status=400
+# @sessao admin
 POST {{base}}/api/admin/users
-X-Usuario-Demo: admin@hospital.dev
 Content-Type: application/json
 
 {"nome": "Teste", "email": "t1@hospital.dev", "papel": "recepcao", "senha": "123456"}
 
 ### ATQ-04.2 · senha longa, mas da lista de comuns
 # @espera status=400
+# @sessao admin
 POST {{base}}/api/admin/users
-X-Usuario-Demo: admin@hospital.dev
 Content-Type: application/json
 
 {"nome": "Teste", "email": "t2@hospital.dev", "papel": "recepcao", "senha": "123456789012345"}
@@ -114,3 +143,47 @@ POST {{base}}/api/auth/login
 Content-Type: application/json
 
 {"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+# ---------------------------------------------------------- capítulo 5
+
+### ATQ-05.1 · cookie de sessão legível por JavaScript
+# @espera status=200 cab=set-cookie~HttpOnly
+# @sessao ana-2
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### ATQ-05.2 · cookie sem Secure, SameSite e prefixo __Host-
+# @espera status=200 cab=set-cookie~Secure cab=set-cookie~SameSite=Lax cab=set-cookie~__Host-
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### ATQ-05.3 · fixação: login aceita o identificador do atacante
+# @espera status=200 cab=set-cookie!~fixado-pelo-atacante
+POST {{base}}/api/auth/login
+Content-Type: application/json
+Cookie: __Host-sessao=fixado-pelo-atacante; sessao=fixado-pelo-atacante
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### PREPARAÇÃO · logout da ana-2, guardando uma cópia do cookie
+# @clona ana-2 ana-2-velha
+# @sessao ana-2
+POST {{base}}/api/auth/logout
+
+### ATQ-05.4 · cookie de antes do logout continua valendo
+# @espera status=401
+# @sessao ana-2-velha
+GET {{base}}/api/auth/me
+
+### ATQ-05.5 · CSRF: outro site dispara ação com a sessão da ana
+# @espera status=403
+# @sessao ana
+POST {{base}}/api/patients
+Origin: https://atacante.exemplo
+Content-Type: application/json
+
+{"nome": "Paciente Fantasma", "cns": "898000000000001", "nascimento": "2000-01-01"}

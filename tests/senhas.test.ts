@@ -5,27 +5,27 @@ import { criarApp } from "../src/app.js";
 import { usuarios } from "../src/acesso/usuarios.js";
 import { caixaDeSaida } from "../src/auth/rotas.js";
 import { banco } from "../src/compartilhado/banco.js";
+import { entrar } from "./ajuda.js";
 
 const app = criarApp();
-const admin = { "X-Usuario-Demo": "admin@hospital.dev" };
-const novo = (email: string, senha: string) =>
-  request(app).post("/api/admin/users").set(admin)
-    .send({ nome: "Teste", email, papel: "recepcao", senha });
+const novo = async (email: string, senha: string, status: number) =>
+  request(app).post("/api/admin/users").set(await entrar(app, "admin@hospital.dev"))
+    .send({ nome: "Teste", email, papel: "recepcao", senha }).expect(status);
 const login = (email: string, senha: string) =>
   request(app).post("/api/auth/login").send({ email, senha });
 
 describe("política de senha (NIST SP 800-63B-4)", () => {
   it("recusa menos de 15 caracteres", async () => {
-    await novo("a@h.dev", "curta-demais").expect(400);
+    await novo("a@h.dev", "curta-demais", 400);
   });
   it("recusa senha da lista de bloqueio", async () => {
-    await novo("b@h.dev", "123456789012345").expect(400);
+    await novo("b@h.dev", "123456789012345", 400);
   });
   it("recusa senha com o próprio e-mail", async () => {
-    await novo("joana@h.dev", "joana-e-o-mar-azul").expect(400);
+    await novo("joana@h.dev", "joana-e-o-mar-azul", 400);
   });
   it("aceita frase longa sem regra de composição", async () => {
-    await novo("c@h.dev", "tres palavras quaisquer juntas").expect(201);
+    await novo("c@h.dev", "tres palavras quaisquer juntas", 201);
   });
 });
 

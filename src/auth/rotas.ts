@@ -2,7 +2,8 @@
 import type { Express } from "express";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
-import { publica } from "../acesso/politica.js";
+import { autenticada, publica } from "../acesso/politica.js";
+import { encerrar, iniciar } from "../acesso/sessoes.js";
 import {
   HASH_FICTICIO, MAX, hashSenha, motivoDeRecusa,
   precisaRehash, verificarSenha,
@@ -34,7 +35,17 @@ export function registrar(app: Express) {
       throw new UnauthorizedError(FALHA);
     if (precisaRehash(u.passwordHash))
       usuarios.trocarHash(u.id, await hashSenha(senha));
+    iniciar(req, res, u.id);
     res.json({ usuario: publico(u) });
+  });
+
+  app.post("/api/auth/logout", autenticada(), (req, res) => {
+    encerrar(req, res);
+    res.status(204).end();
+  });
+
+  app.get("/api/auth/me", autenticada(), (req, res) => {
+    res.json({ usuario: publico(req.usuario!) });
   });
 
   app.post("/api/auth/reset/solicitar", publica(), (req, res) => {

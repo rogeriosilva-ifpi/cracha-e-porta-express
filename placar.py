@@ -4,11 +4,12 @@
 uso: python placar.py ataques.http [--base URL] [-v]
 
 Cada bloco começa com "### ID · descrição" e pode ter uma linha
-"# @espera status=401|404 sem=texto contem=texto". O ataque é
-DEFENDIDO quando
+"# @espera status=401|404 sem=texto contem=texto cab=Nome~texto".
+"# @sessao nome" guarda e reenvia os cookies daquela sessão; blocos sem
+@espera são preparação e não contam. O ataque é DEFENDIDO quando
 a resposta cumpre todas as expectativas.
 """
-import argparse, json, re, sys, urllib.request, urllib.error
+import argparse, copy, json, re, sys, urllib.request, urllib.error
 
 def blocos(texto):
     vars_ = dict(re.findall(r"^@(\w+)\s*=\s*(\S+)", texto, re.M))
@@ -16,13 +17,15 @@ def blocos(texto):
         linhas = bruto.splitlines()
         titulo = linhas[0].strip(" #")
         ident, _, desc = titulo.partition("·")
-        espera, req, i = "", [], 1
+        espera, diretivas, i = None, {}, 1
         while i < len(linhas) and (linhas[i].startswith("#") or not linhas[i].strip()):
-            if linhas[i].startswith("# @espera"):
-                espera = linhas[i].split("@espera", 1)[1]
+            m = re.match(r"# @(\w+)\s*(.*)", linhas[i])
+            if m and m[1] == "espera":
+                espera = m[2].split()
+            elif m:
+                diretivas[m[1]] = m[2].strip()
             i += 1
-        req = linhas[i:]
-        yield ident.strip(), desc.strip(), espera.split(), req, vars_
+        yield ident.strip(), desc.strip(), espera, diretivas, linhas[i:], vars_
 
 def montar(req, vars_, base):
     sub = lambda s: re.sub(r"\{\{(\w+)\}\}", lambda m: base if m[1] == "base" else vars_.get(m[1], ""), s)
@@ -30,18 +33,37 @@ def montar(req, vars_, base):
     cab, i = {}, 1
     while i < len(req) and req[i].strip():
         k, _, v = req[i].partition(":"); cab[k.strip()] = v.strip(); i += 1
-    corpo = "\n".join(req[i:]).strip()
+    resto = req[i:]
+    while resto and (not resto[-1].strip() or resto[-1].lstrip().startswith("#")):
+        resto = resto[:-1]  # comentários e linhas vazias no fim não são corpo
+    corpo = "\n".join(resto).strip()
     return metodo, sub(url.strip()), cab, (sub(corpo).encode() if corpo else None)
 
-def enviar(metodo, url, cab, corpo):
+JARRAS = {}  # sessão nomeada -> {cookie: valor}
+
+
+def enviar(metodo, url, cab, corpo, sessao=None):
+    if sessao and JARRAS.get(sessao):
+        cab = {**cab, "Cookie": "; ".join(f"{k}={v}" for k, v in JARRAS[sessao].items())}
     r = urllib.request.Request(url, data=corpo, method=metodo, headers=cab)
     try:
-        with urllib.request.urlopen(r, timeout=10) as resp:
-            return resp.status, resp.read().decode(errors="replace")
+        resp = urllib.request.urlopen(r, timeout=10)
     except urllib.error.HTTPError as e:
-        return e.code, e.read().decode(errors="replace")
+        resp = e
+    status, texto = resp.status if hasattr(resp, "status") else resp.code, resp.read().decode(errors="replace")
+    cookies = resp.headers.get_all("Set-Cookie") or []
+    if sessao is not None:
+        jarra = JARRAS.setdefault(sessao, {})
+        for c in cookies:
+            nome, _, resto = c.partition("=")
+            valor = resto.split(";")[0]
+            if re.search(r"max-age=0|expires=thu, 01 jan 1970", c, re.I):
+                jarra.pop(nome, None)
+            else:
+                jarra[nome] = valor
+    return status, texto, {"set-cookie": " | ".join(cookies)}
 
-def avaliar(espera, status, corpo):
+def avaliar(espera, status, corpo, cabecalhos):
     ok = True
     for e in espera:
         chave, _, valor = e.partition("=")
@@ -51,6 +73,10 @@ def avaliar(espera, status, corpo):
             ok &= valor not in corpo
         elif chave == "contem":
             ok &= valor in corpo
+        elif chave == "cab":  # cab=Nome~texto (contém) ou cab=Nome!~texto (não contém)
+            nome, nega, alvo = re.match(r"([\w-]+)(!?)~(.*)", valor).groups()
+            presente = alvo.lower() in cabecalhos.get(nome.lower(), "").lower()
+            ok &= (not presente) if nega else presente
     return ok
 
 def main():
@@ -60,10 +86,15 @@ def main():
     texto = open(a.arquivo, encoding="utf-8").read()
     print(f"{'ATQ':<8}{'esperado':<12}{'obtido':<8}veredito")
     total = defendidos = 0
-    for ident, desc, espera, req, vars_ in blocos(texto):
+    for ident, desc, espera, diretivas, req, vars_ in blocos(texto):
         base = a.base or vars_.get("base", "")
-        status, corpo = enviar(*montar(req, vars_, base))
-        ok = avaliar(espera, status, corpo)
+        if "clona" in diretivas:  # @clona origem destino
+            origem, destino = diretivas["clona"].split()
+            JARRAS[destino] = copy.deepcopy(JARRAS.get(origem, {}))
+        status, corpo, cabs = enviar(*montar(req, vars_, base), sessao=diretivas.get("sessao"))
+        if espera is None:  # bloco de preparação (login etc.): não conta
+            continue
+        ok = avaliar(espera, status, corpo, cabs)
         total += 1; defendidos += ok
         esp = next((e.split("=")[1] for e in espera if e.startswith("status=")), "-")
         print(f"{ident.replace('ATQ-',''):<8}{esp:<12}{status:<8}{'defendido' if ok else 'VULNERÁVEL'}")
