@@ -1,0 +1,17 @@
+# Modelo de relações para o OpenFGA (capítulo 10). NÃO roda no
+# laboratório do livro; veja o README para executar com Docker.
+model
+  schema 1.1
+
+type usuario
+
+type paciente
+  relations
+    define assistente: [usuario]
+
+type atendimento
+  relations
+    define paciente: [paciente]
+    define autor: [usuario]
+    define pode_prescrever: autor
+    define pode_ler: autor or assistente from paciente

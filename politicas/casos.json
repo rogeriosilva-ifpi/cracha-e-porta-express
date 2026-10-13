@@ -1,0 +1,9 @@
+[
+  {"caso": "Ana, no próprio atendimento, de plantão", "rotulo": "Ana, própria, plantão", "sujeito": {"id": "u2", "papel": "profissional"}, "recurso": {"id": "e1", "autor": "u2", "status": "aberto"}, "contexto": {"de_plantao": true}, "esperado": "permitido"},
+  {"caso": "Bruno, no atendimento da Ana", "rotulo": "Bruno, atend. da Ana", "sujeito": {"id": "u3", "papel": "profissional"}, "recurso": {"id": "e1", "autor": "u2", "status": "aberto"}, "contexto": {"de_plantao": true}, "esperado": "negado"},
+  {"caso": "Ana, atendimento finalizado", "rotulo": "Ana, finalizado", "sujeito": {"id": "u2", "papel": "profissional"}, "recurso": {"id": "e9", "autor": "u2", "status": "finalizado"}, "contexto": {"de_plantao": true}, "esperado": "negado"},
+  {"caso": "Ana, fora do plantão", "rotulo": "Ana, fora do plantão", "sujeito": {"id": "u2", "papel": "profissional"}, "recurso": {"id": "e1", "autor": "u2", "status": "aberto"}, "contexto": {"de_plantao": false}, "esperado": "negado"},
+  {"caso": "Ana, com registro suspenso", "rotulo": "Ana, suspensa", "sujeito": {"id": "u2", "papel": "profissional", "suspenso": true}, "recurso": {"id": "e1", "autor": "u2", "status": "aberto"}, "contexto": {"de_plantao": true}, "esperado": "negado"},
+  {"caso": "Carla (recepção), atendimento da Ana", "rotulo": "Carla (recepção)", "sujeito": {"id": "u4", "papel": "recepcao"}, "recurso": {"id": "e1", "autor": "u2", "status": "aberto"}, "contexto": {"de_plantao": true}, "esperado": "negado"},
+  {"caso": "Admin, atendimento da Ana", "rotulo": "Admin", "sujeito": {"id": "u1", "papel": "admin"}, "recurso": {"id": "e1", "autor": "u2", "status": "aberto"}, "contexto": {"de_plantao": true}, "esperado": "negado"}
+]

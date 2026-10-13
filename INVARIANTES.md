@@ -77,3 +77,10 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
   ou e-mail. *Cap. 9 · prova: teste de eventos.*
 - **SEC-24** Falha fechada: exceção no caminho de acesso vira 500
   genérico, nunca acesso. *Cap. 9 · prova: teste "falhar fechado".*
+- **SEC-25** Regra de acesso que depende de mais que o papel passa por
+  um ponto de decisão com contrato fixo, autorizar(sujeito, ação,
+  recurso, contexto) -> {permitido, motivo}; política com erro nega.
+  *Cap. 10 · prova: testes de decisão.*
+- **SEC-26** Toda regra de acesso tem uma tabela de casos
+  (`politicas/casos.json`) que roda nas duas stacks e contra cada
+  implementação (código e Cedar). *Cap. 10 · prova: testes tabulares.*

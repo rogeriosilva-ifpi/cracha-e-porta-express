@@ -27,5 +27,13 @@ export const db = {
   ] as Prescricao[],
 };
 
+// Escala de plantões (capítulo 10): horário local, pode virar a meia-noite.
+export interface Plantao { usuarioId: string; inicio: string; fim: string }
+export const escala: Plantao[] = [
+  { usuarioId: "u2", inicio: "07:00", fim: "19:00" },   // Ana, diurno
+  { usuarioId: "u3", inicio: "19:00", fim: "07:00" },   // Bruno, noturno
+  { usuarioId: "u5", inicio: "07:00", fim: "19:00" },   // Eva, diurno
+];
+
 let seq = 100;
 export const novoId = (prefixo: string) => `${prefixo}${++seq}`;

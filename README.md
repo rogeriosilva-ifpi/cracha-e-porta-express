@@ -48,3 +48,9 @@ TOTP. Segredo de laboratório: `5SCWGB6S2EW3ODL6YVCBVS4HUJDGETQJ`
 (cadastre num app autenticador). Para o login OIDC real, suba um
 Keycloak com o realm `hospital` e o cliente `mini-prontuario`; os testes
 usam um provedor falso dentro da suíte.
+
+## Modelos de acesso e políticas (capítulo 10)
+
+`laboratorio/modelos` roda os 7 casos de `politicas/casos.json` contra
+RBAC, RBAC com posse, ABAC e Cedar. As políticas Rego (OPA) e o modelo
+OpenFGA de `politicas/` rodam com Docker; veja `politicas/README.md`.
