@@ -226,3 +226,61 @@ GET {{base}}/.well-known/jwks.json
 # @espera status=401
 GET {{base}}/api/auth/me
 Authorization: Bearer isto.nao.e-um-token
+
+# --- capítulo 7 · refresh token, rotação e logout em todos -----------
+
+### PREPARAÇÃO · o app da ana pede o primeiro par de tokens
+# @guarda rt1=refresh_token
+POST {{base}}/api/auth/token
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### PREPARAÇÃO · rotação normal: rt1 vira rt2
+# @guarda rt2=refresh_token
+POST {{base}}/api/auth/refresh
+Content-Type: application/json
+
+{"refresh_token": "{{rt1}}"}
+
+### ATQ-07.1 · refresh antigo (roubado) aceito depois da rotação
+# @espera status=401
+POST {{base}}/api/auth/refresh
+Content-Type: application/json
+
+{"refresh_token": "{{rt1}}"}
+
+### ATQ-07.2 · depois do reuso, a família continua viva
+# @espera status=401
+POST {{base}}/api/auth/refresh
+Content-Type: application/json
+
+{"refresh_token": "{{rt2}}"}
+
+### PREPARAÇÃO · o app do bruno pede um par
+# @guarda at3=access_token rt3=refresh_token
+POST {{base}}/api/auth/token
+Content-Type: application/json
+
+{"email": "bruno@hospital.dev", "senha": "barco-azul-no-delta"}
+
+### ATQ-07.3 · refresh token aceito como token de acesso
+# @espera status=401
+GET {{base}}/api/auth/me
+Authorization: Bearer {{rt3}}
+
+### PREPARAÇÃO · bruno sai de todos os dispositivos
+POST {{base}}/api/auth/logout-all
+Authorization: Bearer {{at3}}
+
+### ATQ-07.4 · access de antes do "sair de todos" continua valendo
+# @espera status=401
+GET {{base}}/api/auth/me
+Authorization: Bearer {{at3}}
+
+### ATQ-07.5 · refresh de antes do "sair de todos" continua valendo
+# @espera status=401
+POST {{base}}/api/auth/refresh
+Content-Type: application/json
+
+{"refresh_token": "{{rt3}}"}

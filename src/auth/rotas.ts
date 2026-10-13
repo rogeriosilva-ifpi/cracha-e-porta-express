@@ -8,7 +8,9 @@ import {
   HASH_FICTICIO, MAX, hashSenha, motivoDeRecusa,
   precisaRehash, verificarSenha,
 } from "../acesso/senhas.js";
-import { ACCESS_S, emitirAccess, jwks } from "../acesso/tokens.js";
+import {
+  ACCESS_S, AUDIENCIA, emissor, emitirAccess, jwks, verificarAccess,
+} from "../acesso/tokens.js";
 import { publico, usuarios, type Usuario } from "../acesso/usuarios.js";
 import { banco } from "../compartilhado/banco.js";
 import { BadRequestError, UnauthorizedError } from "../compartilhado/erros.js";
@@ -39,6 +41,13 @@ async function conferir(corpo: unknown): Promise<Usuario> {
   return u;
 }
 
+// VERSÃO INGÊNUA (tag cap07-antes): o refresh é um JWT de 30 dias.
+const emitirRefresh = emissor(AUDIENCIA, 30 * 24 * 3600);
+const par = async (usuarioId: string) => ({
+  access_token: await emitirAccess(usuarioId), token_type: "Bearer",
+  expires_in: ACCESS_S, refresh_token: await emitirRefresh(usuarioId),
+});
+
 export function registrar(app: Express) {
   // Navegador: sessão em cookie (capítulo 5).
   app.post("/api/auth/login", publica(), async (req, res) => {
@@ -50,8 +59,25 @@ export function registrar(app: Express) {
   // Clientes de API (app, integrações): token Bearer (capítulo 6).
   app.post("/api/auth/token", publica(), async (req, res) => {
     const u = await conferir(req.body);
-    res.json({ access_token: await emitirAccess(u.id),
-               token_type: "Bearer", expires_in: ACCESS_S });
+    res.json(await par(u.id));
+  });
+
+  // Troca o refresh por um par novo (capítulo 7).
+  app.post("/api/auth/refresh", publica(), async (req, res) => {
+    const { refresh_token } = z.object({ refresh_token: z.string().max(2000) })
+      .parse(req.body);
+    try {
+      const { sub } = await verificarAccess(refresh_token);
+      res.json(await par(sub!));
+    } catch {
+      throw new UnauthorizedError();
+    }
+  });
+
+  // "Sair de todos os dispositivos".
+  app.post("/api/auth/logout-all", autenticada(), (req, res) => {
+    encerrarTodas(req.usuario!.id);
+    res.status(204).end();
   });
 
   // Chaves públicas: quem confere nossos tokens busca aqui.
