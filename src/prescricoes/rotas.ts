@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { z } from "zod";
 import { db, novoId } from "../compartilhado/dados.js";
+import { exige } from "../acesso/politica.js";
 import { NotFoundError } from "../compartilhado/erros.js";
 
 const NovaPrescricao = z.object({
@@ -10,14 +11,14 @@ const NovaPrescricao = z.object({
 });
 
 export function registrar(app: Express) {
-  app.get("/api/medication-requests", (req, res) => {
+  app.get("/api/medication-requests", exige("rx:read"), (req, res) => {
     const { encounterId } = req.query;
     res.json(encounterId
       ? db.prescricoes.filter((m) => m.atendimentoId === encounterId)
       : db.prescricoes);
   });
 
-  app.post("/api/encounters/:id/medication-requests", (req, res) => {
+  app.post("/api/encounters/:id/medication-requests", exige("rx:create"), (req, res) => {
     const e = db.atendimentos.find((x) => x.id === req.params.id);
     if (!e) throw new NotFoundError();
     const dados = NovaPrescricao.parse(req.body);
