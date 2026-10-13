@@ -9,8 +9,9 @@ import {
   precisaRehash, verificarSenha,
 } from "../acesso/senhas.js";
 import {
-  ACCESS_S, AUDIENCIA, emissor, emitirAccess, jwks, verificarAccess,
-} from "../acesso/tokens.js";
+  abrirFamilia, girar, revogarFamilia, revogarTodas,
+} from "../acesso/refresh.js";
+import { ACCESS_S, emitirAccess, jwks } from "../acesso/tokens.js";
 import { publico, usuarios, type Usuario } from "../acesso/usuarios.js";
 import { banco } from "../compartilhado/banco.js";
 import { BadRequestError, UnauthorizedError } from "../compartilhado/erros.js";
@@ -41,11 +42,10 @@ async function conferir(corpo: unknown): Promise<Usuario> {
   return u;
 }
 
-// VERSÃO INGÊNUA (tag cap07-antes): o refresh é um JWT de 30 dias.
-const emitirRefresh = emissor(AUDIENCIA, 30 * 24 * 3600);
-const par = async (usuarioId: string) => ({
-  access_token: await emitirAccess(usuarioId), token_type: "Bearer",
-  expires_in: ACCESS_S, refresh_token: await emitirRefresh(usuarioId),
+// Access curto (JWT, carrega a família em sid) + refresh opaco.
+const par = async (usuarioId: string, familia: string, refresh: string) => ({
+  access_token: await emitirAccess(usuarioId, { sid: familia }),
+  token_type: "Bearer", expires_in: ACCESS_S, refresh_token: refresh,
 });
 
 export function registrar(app: Express) {
@@ -59,24 +59,23 @@ export function registrar(app: Express) {
   // Clientes de API (app, integrações): token Bearer (capítulo 6).
   app.post("/api/auth/token", publica(), async (req, res) => {
     const u = await conferir(req.body);
-    res.json(await par(u.id));
+    const { familia, refresh } = abrirFamilia(u.id);
+    res.json(await par(u.id, familia, refresh));
   });
 
   // Troca o refresh por um par novo (capítulo 7).
   app.post("/api/auth/refresh", publica(), async (req, res) => {
     const { refresh_token } = z.object({ refresh_token: z.string().max(2000) })
       .parse(req.body);
-    try {
-      const { sub } = await verificarAccess(refresh_token);
-      res.json(await par(sub!));
-    } catch {
-      throw new UnauthorizedError();
-    }
+    const g = girar(refresh_token);
+    if (!g) throw new UnauthorizedError();
+    res.json(await par(g.usuarioId, g.familia, g.refresh));
   });
 
   // "Sair de todos os dispositivos".
   app.post("/api/auth/logout-all", autenticada(), (req, res) => {
-    encerrarTodas(req.usuario!.id);
+    encerrarTodas(req.usuario!.id);    // cookies
+    revogarTodas(req.usuario!.id);     // apps
     res.status(204).end();
   });
 
@@ -86,7 +85,8 @@ export function registrar(app: Express) {
   });
 
   app.post("/api/auth/logout", autenticada(), (req, res) => {
-    encerrar(req, res);
+    if (req.familia) revogarFamilia(req.familia);   // app: só este
+    else encerrar(req, res);                        // navegador
     res.status(204).end();
   });
 
@@ -124,6 +124,7 @@ export function registrar(app: Express) {
       .run(sha256(token));
     usuarios.trocarHash(u.id, await hashSenha(novaSenha));
     encerrarTodas(u.id);           // senha nova derruba sessões antigas
+    revogarTodas(u.id);            // e os apps conectados
     res.status(204).end();
   });
 }

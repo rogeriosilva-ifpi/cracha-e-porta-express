@@ -23,7 +23,7 @@ describe("o que o token carrega", () => {
     const { access_token, expires_in } = await token();
     const p = decodeJwt(access_token);
     expect(Object.keys(p).sort())
-      .toEqual(["aud", "exp", "iat", "iss", "jti", "sub"]);
+      .toEqual(["aud", "exp", "iat", "iss", "jti", "sid", "sub"]);
     expect(p.exp! - p.iat!).toBe(600);
     expect(expires_in).toBe(600);
   });

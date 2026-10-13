@@ -25,4 +25,17 @@ banco.exec(`
     ultimo_uso INTEGER NOT NULL,
     expira_em  INTEGER NOT NULL    -- limite absoluto
   );
+  CREATE TABLE IF NOT EXISTS familias (
+    id         TEXT PRIMARY KEY,   -- um login de app = uma família
+    usuario_id TEXT NOT NULL,
+    criada_em  INTEGER NOT NULL,
+    expira_em  INTEGER NOT NULL,   -- limite absoluto da família
+    revogada   INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE TABLE IF NOT EXISTS refresh_tokens (
+    token_hash TEXT PRIMARY KEY,   -- sha256 do refresh, nunca o token
+    familia    TEXT NOT NULL,
+    expira_em  INTEGER NOT NULL,
+    usado      INTEGER NOT NULL DEFAULT 0
+  );
 `);

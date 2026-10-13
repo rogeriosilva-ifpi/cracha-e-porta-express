@@ -42,10 +42,19 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
   *Cap. 5 · prova: ATQ-05.5.*
 - **SEC-13** Token de acesso: assinado com Ed25519 (EdDSA), `typ`
   at+jwt, `kid` no cabeçalho, 10 min de validade e só `iss`, `aud`,
-  `sub`, `iat`, `exp` e `jti`. Nada pessoal; o papel vem do banco.
+  `sub`, `iat`, `exp`, `jti` e `sid` (a família, cap. 7). Nada
+  pessoal; o papel vem do banco.
   *Cap. 6 · prova: ATQ-06.1 a 06.4 e raiox.py.*
 - **SEC-14** Verificação com algoritmo fixo, `iss`, `aud`, `typ` e
   `exp` obrigatórios e 30 s de tolerância. Toda falha é 401, sem plano
   B: nunca decodificar sem verificar. *Cap. 6 · prova: ATQ-06.6 e testes.*
 - **SEC-15** O JWKS publica só chaves públicas; a chave anterior fica
   até seus tokens vencerem. *Cap. 6 · prova: ATQ-06.5 e teste de rotação.*
+- **SEC-16** Refresh token é opaco (32 bytes), guardado só como
+  sha256, vale uma vez e pertence a uma família; parado 7 dias ou com
+  a família acima de 30 dias, morre. *Cap. 7 · prova: testes de refresh.*
+- **SEC-17** Refresh já trocado que reaparece revoga a família inteira
+  e gera o evento `refresh_reutilizado`. *Cap. 7 · prova: ATQ-07.1, 07.2.*
+- **SEC-18** "Sair de todos", troca de senha e desligamento revogam
+  famílias e sessões; nossa API confere `sid` a cada pedido. Refresh
+  nunca serve como access. *Cap. 7 · prova: ATQ-07.3 a 07.5.*
