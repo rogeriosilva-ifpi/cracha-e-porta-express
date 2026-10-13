@@ -40,3 +40,11 @@ python raiox.py --login http://localhost:3000 ana@hospital.dev cajueiro-em-flor-
 (opaco, com rotação); `POST /api/auth/refresh` troca o refresh;
 `POST /api/auth/logout-all` sai de todos os dispositivos; as chaves
 públicas ficam em `/.well-known/jwks.json`. O `raiox.py` só lê o token.
+
+## Segundo fator e login federado (capítulo 8)
+
+A Dra. Eva (`eva@hospital.dev`, senha `mangueira-no-fim-da-rua`) já usa
+TOTP. Segredo de laboratório: `5SCWGB6S2EW3ODL6YVCBVS4HUJDGETQJ`
+(cadastre num app autenticador). Para o login OIDC real, suba um
+Keycloak com o realm `hospital` e o cliente `mini-prontuario`; os testes
+usam um provedor falso dentro da suíte.

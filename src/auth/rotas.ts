@@ -12,6 +12,9 @@ import {
   abrirFamilia, girar, revogarFamilia, revogarTodas,
 } from "../acesso/refresh.js";
 import { ACCESS_S, emitirAccess, jwks } from "../acesso/tokens.js";
+import {
+  abrirDesafio, ativar, iniciarCadastro, mfaAtivo, resolverDesafio,
+} from "../acesso/mfa.js";
 import { publico, usuarios, type Usuario } from "../acesso/usuarios.js";
 import { banco } from "../compartilhado/banco.js";
 import { BadRequestError, UnauthorizedError } from "../compartilhado/erros.js";
@@ -52,6 +55,8 @@ export function registrar(app: Express) {
   // Navegador: sessão em cookie (capítulo 5).
   app.post("/api/auth/login", publica(), async (req, res) => {
     const u = await conferir(req.body);
+    if (mfaAtivo(u.id))            // senha certa ainda não é login
+      return res.json({ mfa_requerido: true, desafio: abrirDesafio(u.id, "cookie") });
     iniciar(req, res, u.id);
     res.json({ usuario: publico(u) });
   });
@@ -59,8 +64,39 @@ export function registrar(app: Express) {
   // Clientes de API (app, integrações): token Bearer (capítulo 6).
   app.post("/api/auth/token", publica(), async (req, res) => {
     const u = await conferir(req.body);
+    if (mfaAtivo(u.id))
+      return res.json({ mfa_requerido: true, desafio: abrirDesafio(u.id, "token") });
     const { familia, refresh } = abrirFamilia(u.id);
     res.json(await par(u.id, familia, refresh));
+  });
+
+  // Segundo passo do login de quem tem MFA (capítulo 8).
+  app.post("/api/auth/mfa/verificar", publica(), async (req, res) => {
+    const { desafio, codigo } = z.object({
+      desafio: z.string().max(100), codigo: z.string().max(20),
+    }).parse(req.body);
+    const r = resolverDesafio(desafio, codigo.trim());
+    if (!r) throw new UnauthorizedError("Código inválido.");
+    if (r.canal === "cookie") {
+      iniciar(req, res, r.usuarioId);
+      return res.json({ usuario: publico(usuarios.porId(r.usuarioId)!) });
+    }
+    const { familia, refresh } = abrirFamilia(r.usuarioId);
+    res.json(await par(r.usuarioId, familia, refresh));
+  });
+
+  // Cadastro do segundo fator, por quem já está logado.
+  app.post("/api/auth/mfa/cadastro", autenticada(), (req, res) => {
+    const c = iniciarCadastro(req.usuario!.id, req.usuario!.email);
+    if (!c) throw new BadRequestError("O segundo fator já está ativo.");
+    res.json(c);
+  });
+
+  app.post("/api/auth/mfa/ativar", autenticada(), (req, res) => {
+    const { codigo } = z.object({ codigo: z.string().max(10) }).parse(req.body);
+    const codigos = ativar(req.usuario!.id, codigo.trim());
+    if (!codigos) throw new BadRequestError("Código inválido.");
+    res.json({ codigos_recuperacao: codigos });
   });
 
   // Troca o refresh por um par novo (capítulo 7).

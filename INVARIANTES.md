@@ -58,3 +58,12 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
 - **SEC-18** "Sair de todos", troca de senha e desligamento revogam
   famílias e sessões; nossa API confere `sid` a cada pedido. Refresh
   nunca serve como access. *Cap. 7 · prova: ATQ-07.3 a 07.5.*
+- **SEC-19** Quem tem segundo fator recebe, após a senha, só um desafio
+  de 5 min e 5 tentativas; sessão ou token saem só depois do código.
+  O mesmo código TOTP não vale duas vezes. *Cap. 8 · prova: ATQ-08.1 a 08.3.*
+- **SEC-20** Códigos de recuperação: 10, mostrados uma vez, guardados
+  como sha256, cada um de uso único. *Cap. 8 · prova: testes de MFA.*
+- **SEC-21** Login OIDC: Authorization Code com PKCE S256, `state`
+  amarrado a um cookie `__Host-` e de uso único, `nonce` conferido, ID
+  token verificado (iss, aud, exp) e conta achada só por vínculo
+  explícito (emissor + sub), nunca pelo e-mail. *Cap. 8 · prova: ATQ-08.4 e testes de OIDC.*
