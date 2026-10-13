@@ -1,0 +1,77 @@
+# ataques.http — suíte de ataques compartilhada pelas duas stacks.
+# Rode no VS Code (REST Client) ou com: python placar.py ataques.http
+# "# @espera" descreve o comportamento SEGURO. Se o servidor não se
+# comportar assim, o ataque funcionou.
+@base = http://localhost:3000
+
+### ATQ-01.1 · sem crachá, lista pacientes
+# @espera status=401
+GET {{base}}/api/patients
+
+### ATQ-01.2 · sem crachá, lê prescrições
+# @espera status=401
+GET {{base}}/api/medication-requests
+
+### ATQ-01.3 · sem crachá, lista usuários
+# @espera status=401
+GET {{base}}/api/admin/users
+
+### ATQ-01.4 · sem crachá, cria um admin
+# @espera status=401
+POST {{base}}/api/admin/users
+Content-Type: application/json
+
+{"nome": "Intruso", "email": "x@x.dev", "papel": "admin"}
+
+### ATQ-01.5 · recepção lê prescrições
+# @espera status=403
+GET {{base}}/api/medication-requests
+X-Usuario-Demo: carla@hospital.dev
+
+### ATQ-01.6 · recepção prescreve
+# @espera status=403
+POST {{base}}/api/encounters/e1/medication-requests
+X-Usuario-Demo: carla@hospital.dev
+Content-Type: application/json
+
+{"medicamento": "Morfina 10 mg", "posologia": "4/4h", "profissionalId": "u2"}
+
+### ATQ-01.7 · admin prescreve (nem admin pode)
+# @espera status=403
+POST {{base}}/api/encounters/e1/medication-requests
+X-Usuario-Demo: admin@hospital.dev
+Content-Type: application/json
+
+{"medicamento": "Morfina 10 mg", "posologia": "4/4h", "profissionalId": "u1"}
+
+### ATQ-01.8 · recepção lista usuários
+# @espera status=403
+GET {{base}}/api/admin/users
+X-Usuario-Demo: carla@hospital.dev
+
+### ATQ-01.9 · rota de debug esquecida
+# @espera status=401|404
+GET {{base}}/api/debug/dump
+
+### ATQ-01.10 · JSON malformado vaza a pilha
+# @espera status=400|422 sem=node_modules sem=Traceback
+POST {{base}}/api/patients
+X-Usuario-Demo: ana@hospital.dev
+Content-Type: application/json
+
+{"nome": "Teste",
+
+### ATQ-01.11 · crachá de papelão forjado
+# @espera status=401
+GET {{base}}/api/admin/users
+X-Usuario-Demo: admin@hospital.dev
+
+### ATQ-01.12 · Bruno lê o atendimento de Ana
+# @espera status=403|404
+GET {{base}}/api/encounters/e1
+X-Usuario-Demo: bruno@hospital.dev
+
+### ATQ-01.13 · hash de senha na resposta
+# @espera sem=passwordHash
+GET {{base}}/api/admin/users
+X-Usuario-Demo: admin@hospital.dev

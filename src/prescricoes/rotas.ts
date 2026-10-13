@@ -1,0 +1,28 @@
+import type { Express } from "express";
+import { z } from "zod";
+import { db, novoId } from "../compartilhado/dados.js";
+import { NotFoundError } from "../compartilhado/erros.js";
+
+const NovaPrescricao = z.object({
+  medicamento: z.string().min(2),
+  posologia: z.string().min(2),
+  profissionalId: z.string(), // quem prescreve vem do corpo (por enquanto)
+});
+
+export function registrar(app: Express) {
+  app.get("/api/medication-requests", (req, res) => {
+    const { encounterId } = req.query;
+    res.json(encounterId
+      ? db.prescricoes.filter((m) => m.atendimentoId === encounterId)
+      : db.prescricoes);
+  });
+
+  app.post("/api/encounters/:id/medication-requests", (req, res) => {
+    const e = db.atendimentos.find((x) => x.id === req.params.id);
+    if (!e) throw new NotFoundError();
+    const dados = NovaPrescricao.parse(req.body);
+    const m = { id: novoId("m"), atendimentoId: e.id, ...dados };
+    db.prescricoes.push(m);
+    res.status(201).json(m);
+  });
+}
