@@ -1,11 +1,7 @@
-// Dados em memória do Mini-Prontuário. O banco entra no capítulo 4.
+// Dados clínicos em memória. Usuários e credenciais moram no SQLite
+// (compartilhado/banco.ts) desde o capítulo 4.
 export type Papel = "admin" | "profissional" | "recepcao";
 
-export interface Usuario {
-  id: string; nome: string; email: string;
-  papel: Papel;
-  passwordHash: string; // hash ilustrativo; os reais nascem no cap. 4
-}
 export interface Paciente { id: string; nome: string; cns: string; nascimento: string }
 export interface Atendimento {
   id: string; pacienteId: string; profissionalId: string;
@@ -16,15 +12,7 @@ export interface Prescricao {
   medicamento: string; posologia: string;
 }
 
-const HASH = "$argon2id$v=19$m=19456,t=2,p=1$c2FsdGRlbW8$aGFzaGlsdXN0cmF0aXZv";
-
 export const db = {
-  usuarios: [
-    { id: "u1", nome: "Admin Geral", email: "admin@hospital.dev", papel: "admin", passwordHash: HASH },
-    { id: "u2", nome: "Dra. Ana", email: "ana@hospital.dev", papel: "profissional", passwordHash: HASH },
-    { id: "u3", nome: "Dr. Bruno", email: "bruno@hospital.dev", papel: "profissional", passwordHash: HASH },
-    { id: "u4", nome: "Carla", email: "carla@hospital.dev", papel: "recepcao", passwordHash: HASH },
-  ] as Usuario[],
   pacientes: [
     { id: "p1", nome: "Maria Souza", cns: "898001234567890", nascimento: "1958-03-14" },
     { id: "p2", nome: "João Lima", cns: "898009876543210", nascimento: "1990-11-02" },

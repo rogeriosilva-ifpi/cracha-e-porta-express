@@ -6,7 +6,7 @@ import { MARCA, type Marcado, type Politica } from "./politica.js";
 export interface Linha { metodo: string; caminho: string; politica?: Politica }
 
 // Rotas que podem ser públicas. Acrescentar aqui exige revisão.
-export const PUBLICAS = new Set(["GET /health"]);
+export const PUBLICAS = new Set(["GET /health", "POST /api/auth/login"]);
 
 export function levantar(app: Express): Linha[] {
   type Camada = { route?: { path: string; methods: Record<string, boolean>;

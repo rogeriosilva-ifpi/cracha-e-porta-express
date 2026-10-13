@@ -75,3 +75,42 @@ X-Usuario-Demo: bruno@hospital.dev
 # @espera sem=passwordHash
 GET {{base}}/api/admin/users
 X-Usuario-Demo: admin@hospital.dev
+
+# ---------------------------------------------------------- capítulo 4
+
+### ATQ-04.1 · admin cria usuário com senha curta
+# @espera status=400
+POST {{base}}/api/admin/users
+X-Usuario-Demo: admin@hospital.dev
+Content-Type: application/json
+
+{"nome": "Teste", "email": "t1@hospital.dev", "papel": "recepcao", "senha": "123456"}
+
+### ATQ-04.2 · senha longa, mas da lista de comuns
+# @espera status=400
+POST {{base}}/api/admin/users
+X-Usuario-Demo: admin@hospital.dev
+Content-Type: application/json
+
+{"nome": "Teste", "email": "t2@hospital.dev", "papel": "recepcao", "senha": "123456789012345"}
+
+### ATQ-04.3 · e-mail inexistente responde diferente
+# @espera status=401 contem=Credenciais
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ninguem@hospital.dev", "senha": "senha-errada-de-proposito"}
+
+### ATQ-04.4 · senha errada responde diferente
+# @espera status=401 contem=Credenciais
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "senha-errada-de-proposito"}
+
+### ATQ-04.5 · login devolve o hash da senha
+# @espera status=200 sem=passwordHash
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}

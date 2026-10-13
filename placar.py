@@ -4,7 +4,8 @@
 uso: python placar.py ataques.http [--base URL] [-v]
 
 Cada bloco começa com "### ID · descrição" e pode ter uma linha
-"# @espera status=401|404 sem=texto". O ataque é DEFENDIDO quando
+"# @espera status=401|404 sem=texto contem=texto". O ataque é
+DEFENDIDO quando
 a resposta cumpre todas as expectativas.
 """
 import argparse, json, re, sys, urllib.request, urllib.error
@@ -48,6 +49,8 @@ def avaliar(espera, status, corpo):
             ok &= str(status) in valor.split("|")
         elif chave == "sem":
             ok &= valor not in corpo
+        elif chave == "contem":
+            ok &= valor in corpo
     return ok
 
 def main():

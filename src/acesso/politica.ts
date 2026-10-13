@@ -1,7 +1,7 @@
 // Toda rota declara uma política como PRIMEIRO middleware.
 // O censo (scripts/censo.ts e tests/censo.test.ts) lê esta marca.
 import type { RequestHandler } from "express";
-import type { Usuario } from "../compartilhado/dados.js";
+import type { Usuario } from "./usuarios.js";
 import { ForbiddenError, UnauthorizedError } from "../compartilhado/erros.js";
 import { identificar } from "./cracha-provisorio.js";
 import { pode, type Permissao } from "./permissoes.js";
