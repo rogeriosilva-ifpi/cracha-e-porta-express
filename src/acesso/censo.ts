@@ -9,6 +9,7 @@ export interface Linha { metodo: string; caminho: string; politica?: Politica }
 export const PUBLICAS = new Set([
   "GET /health",
   "POST /api/auth/login",
+  "POST /api/auth/token",
   "POST /api/auth/reset/solicitar",
   "POST /api/auth/reset/confirmar",
 ]);

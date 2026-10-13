@@ -187,3 +187,42 @@ Origin: https://atacante.exemplo
 Content-Type: application/json
 
 {"nome": "Paciente Fantasma", "cns": "898000000000001", "nascimento": "2000-01-01"}
+
+# --- capítulo 6 · tokens de API (JWT) -------------------------------
+
+### ATQ-06.1 · token carrega dados pessoais legíveis
+# @espera status=200 jwt-sem=email,nome,papel
+POST {{base}}/api/auth/token
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### ATQ-06.2 · token vale por dias
+# @espera status=200 jwt-ttl<=900
+POST {{base}}/api/auth/token
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### ATQ-06.3 · token sem emissor, audiência e identificador
+# @espera status=200 jwt-tem=iss,aud,jti
+POST {{base}}/api/auth/token
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### ATQ-06.4 · token assinado com segredo compartilhado
+# @espera status=200 jwt-alg=EdDSA
+POST {{base}}/api/auth/token
+Content-Type: application/json
+
+{"email": "ana@hospital.dev", "senha": "cajueiro-em-flor-no-quintal"}
+
+### ATQ-06.5 · chave pública não publicada, ou com a parte privada
+# @espera status=200 contem="kid" sem="d":
+GET {{base}}/.well-known/jwks.json
+
+### ATQ-06.6 · token malformado derruba o servidor (500)
+# @espera status=401
+GET {{base}}/api/auth/me
+Authorization: Bearer isto.nao.e-um-token

@@ -5,11 +5,16 @@ uso: python placar.py ataques.http [--base URL] [-v]
 
 Cada bloco começa com "### ID · descrição" e pode ter uma linha
 "# @espera status=401|404 sem=texto contem=texto cab=Nome~texto".
-"# @sessao nome" guarda e reenvia os cookies daquela sessão; blocos sem
-@espera são preparação e não contam. O ataque é DEFENDIDO quando
-a resposta cumpre todas as expectativas.
+"# @sessao nome" guarda e reenvia os cookies daquela sessão;
+"# @guarda var=campo" guarda um campo do JSON da resposta em {{var}}.
+Expectativas jwt-* leem o access_token da resposta (sem conferir
+assinatura): jwt-alg=EdDSA, jwt-tem=iss,aud, jwt-sem=email, jwt-ttl<=900.
+Blocos sem @espera são preparação e não contam. O ataque é DEFENDIDO
+quando a resposta cumpre todas as expectativas.
 """
-import argparse, copy, json, re, sys, urllib.request, urllib.error
+import argparse, base64, copy, json, re, sys, urllib.request, urllib.error
+
+GUARDADOS = {}  # @guarda: valores tirados das respostas
 
 def blocos(texto):
     vars_ = dict(re.findall(r"^@(\w+)\s*=\s*(\S+)", texto, re.M))
@@ -28,11 +33,12 @@ def blocos(texto):
         yield ident.strip(), desc.strip(), espera, diretivas, linhas[i:], vars_
 
 def montar(req, vars_, base):
-    sub = lambda s: re.sub(r"\{\{(\w+)\}\}", lambda m: base if m[1] == "base" else vars_.get(m[1], ""), s)
+    todas = {**vars_, **GUARDADOS}
+    sub = lambda s: re.sub(r"\{\{(\w+)\}\}", lambda m: base if m[1] == "base" else todas.get(m[1], ""), s)
     metodo, url = req[0].split(maxsplit=1)
     cab, i = {}, 1
     while i < len(req) and req[i].strip():
-        k, _, v = req[i].partition(":"); cab[k.strip()] = v.strip(); i += 1
+        k, _, v = req[i].partition(":"); cab[k.strip()] = sub(v.strip()); i += 1
     resto = req[i:]
     while resto and (not resto[-1].strip() or resto[-1].lstrip().startswith("#")):
         resto = resto[:-1]  # comentários e linhas vazias no fim não são corpo
@@ -63,8 +69,18 @@ def enviar(metodo, url, cab, corpo, sessao=None):
                 jarra[nome] = valor
     return status, texto, {"set-cookie": " | ".join(cookies)}
 
+def jwt_da_resposta(corpo):
+    try:
+        cab, conteudo, _ = json.loads(corpo)["access_token"].split(".")
+        ler = lambda s: json.loads(base64.urlsafe_b64decode(s + "=" * (-len(s) % 4)))
+        return ler(cab), ler(conteudo)
+    except Exception:
+        return {}, {}
+
+
 def avaliar(espera, status, corpo, cabecalhos):
     ok = True
+    jcab, jcont = jwt_da_resposta(corpo) if any(e.startswith("jwt-") for e in espera) else ({}, {})
     for e in espera:
         chave, _, valor = e.partition("=")
         if chave == "status":
@@ -77,6 +93,14 @@ def avaliar(espera, status, corpo, cabecalhos):
             nome, nega, alvo = re.match(r"([\w-]+)(!?)~(.*)", valor).groups()
             presente = alvo.lower() in cabecalhos.get(nome.lower(), "").lower()
             ok &= (not presente) if nega else presente
+        elif chave == "jwt-alg":
+            ok &= jcab.get("alg") == valor
+        elif chave == "jwt-tem":
+            ok &= all(c in jcont for c in valor.split(","))
+        elif chave == "jwt-sem":
+            ok &= bool(jcont) and all(c not in jcont for c in valor.split(","))
+        elif chave == "jwt-ttl<":
+            ok &= "exp" in jcont and jcont["exp"] - jcont.get("iat", 0) <= int(valor)
     return ok
 
 def main():
@@ -92,6 +116,14 @@ def main():
             origem, destino = diretivas["clona"].split()
             JARRAS[destino] = copy.deepcopy(JARRAS.get(origem, {}))
         status, corpo, cabs = enviar(*montar(req, vars_, base), sessao=diretivas.get("sessao"))
+        if "guarda" in diretivas:  # @guarda var=campo var2=campo2
+            try:
+                dados = json.loads(corpo)
+            except ValueError:
+                dados = {}
+            for par in diretivas["guarda"].split():
+                var, _, campo = par.partition("=")
+                GUARDADOS[var] = str(dados.get(campo, ""))
         if espera is None:  # bloco de preparação (login etc.): não conta
             continue
         ok = avaliar(espera, status, corpo, cabs)

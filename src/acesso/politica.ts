@@ -3,7 +3,7 @@
 import type { RequestHandler } from "express";
 import type { Usuario } from "./usuarios.js";
 import { ForbiddenError, UnauthorizedError } from "../compartilhado/erros.js";
-import { identificar } from "./sessoes.js";
+import { identificar } from "./identidade.js";
 import { pode, type Permissao } from "./permissoes.js";
 
 declare global {
@@ -22,16 +22,16 @@ export const publica = () => marcar((_req, _res, next) => next(), { publica: tru
 
 // Basta estar logado (ex.: logout, "quem sou eu").
 export const autenticada = () =>
-  marcar((req, _res, next) => {
-    const usuario = identificar(req);
+  marcar(async (req, _res, next) => {
+    const usuario = await identificar(req);
     if (!usuario) throw new UnauthorizedError();
     req.usuario = usuario;
     next();
   }, { autenticada: true });
 
 export const exige = (permissao: Permissao) =>
-  marcar((req, _res, next) => {
-    const usuario = identificar(req);                       // portão 1
+  marcar(async (req, _res, next) => {
+    const usuario = await identificar(req);                       // portão 1
     if (!usuario) throw new UnauthorizedError();
     if (!pode(usuario.papel, permissao)) throw new ForbiddenError(); // portão 2
     req.usuario = usuario;

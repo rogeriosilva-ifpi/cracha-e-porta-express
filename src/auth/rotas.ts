@@ -8,7 +8,8 @@ import {
   HASH_FICTICIO, MAX, hashSenha, motivoDeRecusa,
   precisaRehash, verificarSenha,
 } from "../acesso/senhas.js";
-import { publico, usuarios } from "../acesso/usuarios.js";
+import { emitirAccess } from "../acesso/tokens.js";
+import { publico, usuarios, type Usuario } from "../acesso/usuarios.js";
 import { banco } from "../compartilhado/banco.js";
 import { BadRequestError, UnauthorizedError } from "../compartilhado/erros.js";
 
@@ -23,20 +24,33 @@ const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 /** Caixa de saída simulada: o "e-mail" que levaria o link. */
 export const caixaDeSaida: { para: string; token: string }[] = [];
 
+/** Confere e-mail e senha (capítulo 4). Toda falha é a mesma. */
+async function conferir(corpo: unknown): Promise<Usuario> {
+  const { email, senha } = Login.parse(corpo);
+  const u = usuarios.porEmail(email);
+  if (!u) {
+    await verificarSenha(HASH_FICTICIO, senha); // mesmo custo
+    throw new UnauthorizedError(FALHA);
+  }
+  if (!(await verificarSenha(u.passwordHash, senha)))
+    throw new UnauthorizedError(FALHA);
+  if (precisaRehash(u.passwordHash))
+    usuarios.trocarHash(u.id, await hashSenha(senha));
+  return u;
+}
+
 export function registrar(app: Express) {
+  // Navegador: sessão em cookie (capítulo 5).
   app.post("/api/auth/login", publica(), async (req, res) => {
-    const { email, senha } = Login.parse(req.body);
-    const u = usuarios.porEmail(email);
-    if (!u) {
-      await verificarSenha(HASH_FICTICIO, senha); // mesmo custo
-      throw new UnauthorizedError(FALHA);
-    }
-    if (!(await verificarSenha(u.passwordHash, senha)))
-      throw new UnauthorizedError(FALHA);
-    if (precisaRehash(u.passwordHash))
-      usuarios.trocarHash(u.id, await hashSenha(senha));
+    const u = await conferir(req.body);
     iniciar(req, res, u.id);
     res.json({ usuario: publico(u) });
+  });
+
+  // Clientes de API (app, integrações): token Bearer (capítulo 6).
+  app.post("/api/auth/token", publica(), async (req, res) => {
+    const u = await conferir(req.body);
+    res.json({ access_token: await emitirAccess(u), token_type: "Bearer" });
   });
 
   app.post("/api/auth/logout", autenticada(), (req, res) => {
