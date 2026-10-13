@@ -33,3 +33,12 @@ R  Primeiro middleware exige("encounter:read"); erros só por throw das
 F  Só o trecho app.get(...), comentado em português.
 A  npm run censo sem problemas.
 ```
+
+## Revisão · contexto novo
+
+```
+Revise src/app.ts e src/acesso/ contra INVARIANTES.md (SEC-02 a
+SEC-04): ordem dos middlewares, rota fora do padrão de política, erro
+que escapa do tradutor de erros. Para cada achado: arquivo:linha e um
+curl que o demonstre. Não reescreva código.
+```
