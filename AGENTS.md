@@ -14,7 +14,8 @@ censo. Erros HTTP só em `http/erros`.
   `PUBLICAS` no censo, e esse diff é revisado.
 - Permissão nova: acrescente na `MATRIZ` e em docs/PERMISSOES.md no
   mesmo commit.
-- `cracha-provisorio` é andaime. Não o estenda; ele morre no cap. 6.
+- Identidade vem só da sessão (`acesso/sessoes`). Nunca leia papel ou
+  usuário de cabeçalho, corpo ou query.
 
 ## Portões (rode antes de declarar pronto)
 - `npm run check` · `npm test` · `npm run censo`

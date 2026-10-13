@@ -3,6 +3,7 @@ import helmet from "helmet";
 import cors from "cors";
 import { publica } from "./acesso/politica.js";
 import { rotaInexistente, tratarErros } from "./http/erros.js";
+import { verificarOrigem } from "./http/origem.js";
 import * as pacientes from "./pacientes/rotas.js";
 import * as atendimentos from "./atendimentos/rotas.js";
 import * as prescricoes from "./prescricoes/rotas.js";
@@ -16,6 +17,7 @@ export function criarApp() {
   // BORDA: cabeçalhos, origem, corpo. A ordem importa.
   app.use(helmet());
   app.use(cors({ origin: ORIGENS, credentials: true }));
+  app.use(verificarOrigem(ORIGENS));
   app.use(express.json({ limit: "100kb" }));
 
   app.get("/health", publica(), (_req, res) => { res.json({ status: "ok" }); });

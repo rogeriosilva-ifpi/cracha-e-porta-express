@@ -18,4 +18,11 @@ banco.exec(`
     expira_em  INTEGER NOT NULL,   -- epoch em ms
     usado      INTEGER NOT NULL DEFAULT 0
   );
+  CREATE TABLE IF NOT EXISTS sessoes (
+    id_hash    TEXT PRIMARY KEY,   -- sha256 do token do cookie
+    usuario_id TEXT NOT NULL,
+    criada_em  INTEGER NOT NULL,
+    ultimo_uso INTEGER NOT NULL,
+    expira_em  INTEGER NOT NULL    -- limite absoluto
+  );
 `);

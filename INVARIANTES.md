@@ -30,3 +30,13 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
 - **SEC-08** Token de redefinição: 32 bytes aleatórios, guardado só
   como sha256, expira em 15 min, uso único; a resposta do pedido é a
   mesma exista ou não o e-mail. *Cap. 4 · prova: testes de senha.*
+- **SEC-09** Sessão vive no servidor; o banco guarda só o sha256 do
+  token; o login sempre cria uma sessão nova e apaga a anterior.
+  *Cap. 5 · prova: ATQ-05.3.*
+- **SEC-10** Cookie `__Host-sessao` com HttpOnly, Secure, SameSite=Lax
+  e Path=/. *Cap. 5 · prova: ATQ-05.1, 05.2.*
+- **SEC-11** Sessão expira com 30 min sem uso e 8 h no total; logout e
+  troca de senha apagam no servidor. *Cap. 5 · prova: ATQ-05.4 e testes.*
+- **SEC-12** Método que altera dados com Origin fora da lista, ou
+  Sec-Fetch-Site cross-site, recebe 403. CORS só com lista de origens.
+  *Cap. 5 · prova: ATQ-05.5.*

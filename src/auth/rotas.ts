@@ -3,7 +3,7 @@ import type { Express } from "express";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import { autenticada, publica } from "../acesso/politica.js";
-import { encerrar, iniciar } from "../acesso/sessoes.js";
+import { encerrar, encerrarTodas, iniciar } from "../acesso/sessoes.js";
 import {
   HASH_FICTICIO, MAX, hashSenha, motivoDeRecusa,
   precisaRehash, verificarSenha,
@@ -77,6 +77,7 @@ export function registrar(app: Express) {
     banco.prepare("UPDATE redefinicoes SET usado = 1 WHERE token_hash = ?")
       .run(sha256(token));
     usuarios.trocarHash(u.id, await hashSenha(novaSenha));
+    encerrarTodas(u.id);           // senha nova derruba sessões antigas
     res.status(204).end();
   });
 }
