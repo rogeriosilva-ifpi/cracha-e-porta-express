@@ -1,5 +1,5 @@
 // Login e redefinição de senha (capítulo 4).
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import { autenticada, publica } from "../acesso/politica.js";
@@ -17,7 +17,11 @@ import {
 } from "../acesso/mfa.js";
 import { publico, usuarios, type Usuario } from "../acesso/usuarios.js";
 import { banco } from "../compartilhado/banco.js";
-import { BadRequestError, UnauthorizedError } from "../compartilhado/erros.js";
+import {
+  BadRequestError, TooManyRequestsError, UnauthorizedError,
+} from "../compartilhado/erros.js";
+import { contaAnonima, registrar as evento } from "../compartilhado/eventos.js";
+import { bloqueio, limparFalhas, porIp, registrarFalha } from "../acesso/limites.js";
 
 const Login = z.object({
   email: z.string().max(254),
@@ -30,18 +34,27 @@ const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 /** Caixa de saída simulada: o "e-mail" que levaria o link. */
 export const caixaDeSaida: { para: string; token: string }[] = [];
 
-/** Confere e-mail e senha (capítulo 4). Toda falha é a mesma. */
-async function conferir(corpo: unknown): Promise<Usuario> {
-  const { email, senha } = Login.parse(corpo);
+/** Confere e-mail e senha (capítulos 4 e 9). Toda falha é a mesma. */
+async function conferir(req: Request): Promise<Usuario> {
+  const { email, senha } = Login.parse(req.body);
+  const ip = req.ip;
+  const espera = bloqueio(email, req);      // antes de gastar argon2
+  if (espera) {
+    evento("conta_limitada", { conta: contaAnonima(email), ip });
+    throw new TooManyRequestsError(espera);
+  }
   const u = usuarios.porEmail(email);
-  if (!u) {
-    await verificarSenha(HASH_FICTICIO, senha); // mesmo custo
+  const ok = u ? await verificarSenha(u.passwordHash, senha)
+               : (await verificarSenha(HASH_FICTICIO, senha), false); // mesmo custo
+  if (!u || !ok) {
+    registrarFalha(email, req);
+    evento("login_falhou", { usuario: u?.id, conta: contaAnonima(email), ip });
     throw new UnauthorizedError(FALHA);
   }
-  if (!(await verificarSenha(u.passwordHash, senha)))
-    throw new UnauthorizedError(FALHA);
+  limparFalhas(email, req);
   if (precisaRehash(u.passwordHash))
     usuarios.trocarHash(u.id, await hashSenha(senha));
+  evento("login_ok", { usuario: u.id, ip });
   return u;
 }
 
@@ -53,8 +66,8 @@ const par = async (usuarioId: string, familia: string, refresh: string) => ({
 
 export function registrar(app: Express) {
   // Navegador: sessão em cookie (capítulo 5).
-  app.post("/api/auth/login", publica(), async (req, res) => {
-    const u = await conferir(req.body);
+  app.post("/api/auth/login", publica(), porIp, async (req, res) => {
+    const u = await conferir(req);
     if (mfaAtivo(u.id))            // senha certa ainda não é login
       return res.json({ mfa_requerido: true, desafio: abrirDesafio(u.id, "cookie") });
     iniciar(req, res, u.id);
@@ -62,8 +75,8 @@ export function registrar(app: Express) {
   });
 
   // Clientes de API (app, integrações): token Bearer (capítulo 6).
-  app.post("/api/auth/token", publica(), async (req, res) => {
-    const u = await conferir(req.body);
+  app.post("/api/auth/token", publica(), porIp, async (req, res) => {
+    const u = await conferir(req);
     if (mfaAtivo(u.id))
       return res.json({ mfa_requerido: true, desafio: abrirDesafio(u.id, "token") });
     const { familia, refresh } = abrirFamilia(u.id);
@@ -71,12 +84,15 @@ export function registrar(app: Express) {
   });
 
   // Segundo passo do login de quem tem MFA (capítulo 8).
-  app.post("/api/auth/mfa/verificar", publica(), async (req, res) => {
+  app.post("/api/auth/mfa/verificar", publica(), porIp, async (req, res) => {
     const { desafio, codigo } = z.object({
       desafio: z.string().max(100), codigo: z.string().max(20),
     }).parse(req.body);
     const r = resolverDesafio(desafio, codigo.trim());
-    if (!r) throw new UnauthorizedError("Código inválido.");
+    if (!r) {
+      evento("mfa_falhou", { ip: req.ip });
+      throw new UnauthorizedError("Código inválido.");
+    }
     if (r.canal === "cookie") {
       iniciar(req, res, r.usuarioId);
       return res.json({ usuario: publico(usuarios.porId(r.usuarioId)!) });
@@ -100,7 +116,7 @@ export function registrar(app: Express) {
   });
 
   // Troca o refresh por um par novo (capítulo 7).
-  app.post("/api/auth/refresh", publica(), async (req, res) => {
+  app.post("/api/auth/refresh", publica(), porIp, async (req, res) => {
     const { refresh_token } = z.object({ refresh_token: z.string().max(2000) })
       .parse(req.body);
     const g = girar(refresh_token);
@@ -112,6 +128,7 @@ export function registrar(app: Express) {
   app.post("/api/auth/logout-all", autenticada(), (req, res) => {
     encerrarTodas(req.usuario!.id);    // cookies
     revogarTodas(req.usuario!.id);     // apps
+    evento("saiu_de_todos", { usuario: req.usuario!.id, ip: req.ip });
     res.status(204).end();
   });
 
@@ -130,7 +147,7 @@ export function registrar(app: Express) {
     res.json({ usuario: publico(req.usuario!) });
   });
 
-  app.post("/api/auth/reset/solicitar", publica(), (req, res) => {
+  app.post("/api/auth/reset/solicitar", publica(), porIp, (req, res) => {
     const { email } = z.object({ email: z.string().max(254) }).parse(req.body);
     const u = usuarios.porEmail(email);
     if (u) {
@@ -144,7 +161,7 @@ export function registrar(app: Express) {
     res.status(202).json({ mensagem: "Se o e-mail existir, enviaremos instruções." });
   });
 
-  app.post("/api/auth/reset/confirmar", publica(), async (req, res) => {
+  app.post("/api/auth/reset/confirmar", publica(), porIp, async (req, res) => {
     const { token, novaSenha } = z.object({
       token: z.string().max(100), novaSenha: z.string().max(MAX),
     }).parse(req.body);
@@ -161,6 +178,7 @@ export function registrar(app: Express) {
     usuarios.trocarHash(u.id, await hashSenha(novaSenha));
     encerrarTodas(u.id);           // senha nova derruba sessões antigas
     revogarTodas(u.id);            // e os apps conectados
+    evento("senha_redefinida", { usuario: u.id, ip: req.ip });
     res.status(204).end();
   });
 }

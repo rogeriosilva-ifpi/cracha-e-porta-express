@@ -2,6 +2,7 @@
 // reuso (capítulo 7). Família = um login de app num dispositivo.
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { banco } from "../compartilhado/banco.js";
+import { registrar } from "../compartilhado/eventos.js";
 
 export const REFRESH_MS = 7 * 24 * 3600 * 1000;   // parado 7 dias: morre
 export const FAMILIA_MS = 30 * 24 * 3600 * 1000;  // 30 dias: login de novo
@@ -45,8 +46,7 @@ export function girar(token: string) {
   if (changes === 0) {
     if (r.usado) {                     // já foi trocado: alguém o copiou
       revogarFamilia(f.id);
-      console.warn(JSON.stringify({ evento: "refresh_reutilizado",
-        familia: f.id, usuario: f.usuario_id }));
+      registrar("refresh_reutilizado", { familia: f.id, usuario: f.usuario_id });
     }
     return undefined;
   }

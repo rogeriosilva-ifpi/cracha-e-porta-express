@@ -67,3 +67,13 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
   amarrado a um cookie `__Host-` e de uso único, `nonce` conferido, ID
   token verificado (iss, aud, exp) e conta achada só por vínculo
   explícito (emissor + sub), nunca pelo e-mail. *Cap. 8 · prova: ATQ-08.4 e testes de OIDC.*
+- **SEC-22** Rotas de entrada (login, token, refresh, MFA, redefinição)
+  têm limite por IP; o login tem limite de FALHAS por conta+IP (5 em
+  15 min) e por conta (50 em 1 h), conferido antes do argon2; 429 com
+  Retry-After, igual para conta que existe ou não. *Cap. 9 · prova: testes de limite.*
+- **SEC-23** Eventos de segurança (login, falha, limite, MFA, reuso de
+  refresh, senha redefinida, sair de todos) saem como uma linha JSON,
+  com id do usuário ou hash curto da conta; nunca senha, token, código
+  ou e-mail. *Cap. 9 · prova: teste de eventos.*
+- **SEC-24** Falha fechada: exceção no caminho de acesso vira 500
+  genérico, nunca acesso. *Cap. 9 · prova: teste "falhar fechado".*
