@@ -10,6 +10,7 @@ export const PUBLICAS = new Set([
   "GET /health",
   "POST /api/auth/login",
   "POST /api/auth/token",
+  "GET /.well-known/jwks.json",
   "POST /api/auth/reset/solicitar",
   "POST /api/auth/reset/confirmar",
 ]);

@@ -8,7 +8,7 @@ import {
   HASH_FICTICIO, MAX, hashSenha, motivoDeRecusa,
   precisaRehash, verificarSenha,
 } from "../acesso/senhas.js";
-import { emitirAccess } from "../acesso/tokens.js";
+import { ACCESS_S, emitirAccess, jwks } from "../acesso/tokens.js";
 import { publico, usuarios, type Usuario } from "../acesso/usuarios.js";
 import { banco } from "../compartilhado/banco.js";
 import { BadRequestError, UnauthorizedError } from "../compartilhado/erros.js";
@@ -50,7 +50,13 @@ export function registrar(app: Express) {
   // Clientes de API (app, integrações): token Bearer (capítulo 6).
   app.post("/api/auth/token", publica(), async (req, res) => {
     const u = await conferir(req.body);
-    res.json({ access_token: await emitirAccess(u), token_type: "Bearer" });
+    res.json({ access_token: await emitirAccess(u.id),
+               token_type: "Bearer", expires_in: ACCESS_S });
+  });
+
+  // Chaves públicas: quem confere nossos tokens busca aqui.
+  app.get("/.well-known/jwks.json", publica(), async (_req, res) => {
+    res.json(await jwks());
   });
 
   app.post("/api/auth/logout", autenticada(), (req, res) => {

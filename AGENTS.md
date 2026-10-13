@@ -14,9 +14,9 @@ censo. Erros HTTP só em `http/erros`.
   `PUBLICAS` no censo, e esse diff é revisado.
 - Permissão nova: acrescente na `MATRIZ` e em docs/PERMISSOES.md no
   mesmo commit.
-- Identidade vem só da sessão (`acesso/sessoes`). Nunca leia papel ou
-  usuário de cabeçalho, corpo ou query.
+- Identidade vem só de `acesso/identidade.identificar()`: cookie de
+  sessão ou token Bearer verificado. Nunca leia papel ou usuário de
+  cabeçalho, corpo, query ou do conteúdo de um token sem verificar.
+- Token: nunca `decode` sem verificar, nunca plano B no `catch`.
 
 ## Portões (rode antes de declarar pronto)
-- `npm run check` · `npm test` · `npm run censo`
-- `python placar.py ataques.http` com o servidor no ar (`npm start`)

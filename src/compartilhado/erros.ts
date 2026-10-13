@@ -1,4 +1,4 @@
-// Hierarquia de erros HTTP do curso (Tópico 2), com 401 e 403 do Tópico 3.
+// Hierarquia de erros HTTP: cada erro sabe seu status.
 export class HttpError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }

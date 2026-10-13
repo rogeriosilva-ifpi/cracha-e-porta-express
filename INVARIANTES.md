@@ -40,3 +40,12 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
 - **SEC-12** Método que altera dados com Origin fora da lista, ou
   Sec-Fetch-Site cross-site, recebe 403. CORS só com lista de origens.
   *Cap. 5 · prova: ATQ-05.5.*
+- **SEC-13** Token de acesso: assinado com Ed25519 (EdDSA), `typ`
+  at+jwt, `kid` no cabeçalho, 10 min de validade e só `iss`, `aud`,
+  `sub`, `iat`, `exp` e `jti`. Nada pessoal; o papel vem do banco.
+  *Cap. 6 · prova: ATQ-06.1 a 06.4 e raiox.py.*
+- **SEC-14** Verificação com algoritmo fixo, `iss`, `aud`, `typ` e
+  `exp` obrigatórios e 30 s de tolerância. Toda falha é 401, sem plano
+  B: nunca decodificar sem verificar. *Cap. 6 · prova: ATQ-06.6 e testes.*
+- **SEC-15** O JWKS publica só chaves públicas; a chave anterior fica
+  até seus tokens vencerem. *Cap. 6 · prova: ATQ-06.5 e teste de rotação.*
