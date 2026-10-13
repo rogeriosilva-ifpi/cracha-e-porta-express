@@ -1,4 +1,4 @@
-// Matriz de permissões do Mini-Prontuário (contrato do Tópico 3).
+// Matriz de permissões do Mini-Prontuário (capítulo 3).
 // Fonte única: rotas e testes leem daqui. O cap. 11 discute quando
 // ela deve sair do código e ir para o banco.
 import type { Papel } from "../compartilhado/dados.js";
