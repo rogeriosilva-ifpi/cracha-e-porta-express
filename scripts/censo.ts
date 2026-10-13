@@ -6,8 +6,8 @@ for (const { metodo, caminho, politica } of linhas) {
   const p = !politica ? "— NENHUMA —" : "publica" in politica ? "pública" : politica.permissao;
   const linha = `${metodo.padEnd(6)} ${caminho}`;
   // cabe em 46 colunas? política na mesma linha; senão, embaixo
-  console.log(linha.length + p.length < 44
-    ? `${linha.padEnd(30)} ${p}` : `${linha}\n${"".padEnd(30)} ${p}`);
+  console.log(linha.length <= 28
+    ? `${linha.padEnd(29)}${p}` : `${linha}\n${"".padEnd(29)}${p}`);
 }
 const erros = problemas(linhas);
 console.log(`\n${linhas.length} rotas · ${erros.length} problema(s)`);
