@@ -10,8 +10,9 @@ import * as prescricoes from "./prescricoes/rotas.js";
 import * as admin from "./admin/rotas.js";
 import * as auth from "./auth/rotas.js";
 import * as oidc from "./auth/oidc.js";
+import { config } from "./compartilhado/config.js";
 
-const ORIGENS = (process.env.CORS_ORIGINS ?? "http://localhost:5173").split(",");
+const ORIGENS = config.origens;
 
 export function criarApp() {
   const app = express();

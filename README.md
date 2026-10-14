@@ -67,3 +67,10 @@ python placar.py matriz.http                                   # papel × rota
 Atendimentos e prescrições são buscados dentro do escopo de quem pede
 (`atendimentos/escopo`): o que não se vê responde 404. A prescrição usa
 a regra ABAC do capítulo 10 com o relógio real: fora do plantão, 403.
+
+## Segredos e dependências (capítulo 13)
+
+Copie `.env.exemplo` para `.env` e preencha com segredos reais (em
+produção, o servidor recusa os valores de exemplo). `python varredura.py`
+procura segredos em todo o histórico do git; `npm audit` / `pip-audit`
+conferem as dependências.

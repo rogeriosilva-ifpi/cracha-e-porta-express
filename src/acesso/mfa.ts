@@ -2,6 +2,7 @@
 import * as OTPAuth from "otpauth";
 import { createHash, randomBytes } from "node:crypto";
 import { banco } from "../compartilhado/banco.js";
+import { cifrar, decifrar } from "../compartilhado/cofre.js";
 
 const PERIODO_S = 30;
 const DESAFIO_MS = 5 * 60 * 1000;    // entre a senha e o código
@@ -13,8 +14,11 @@ const totp = (segredo: string, rotulo = "") => new OTPAuth.TOTP({
   issuer: "Mini-Prontuário", label: rotulo, algorithm: "SHA1",
   digits: 6, period: PERIODO_S, secret: OTPAuth.Secret.fromBase32(segredo),
 });
-const linha = (usuarioId: string) =>
-  banco.prepare("SELECT * FROM mfa WHERE usuario_id = ?").get(usuarioId) as Mfa | undefined;
+// O segredo TOTP é guardado CIFRADO (cap. 13): o banco sozinho não basta.
+const linha = (usuarioId: string): Mfa | undefined => {
+  const m = banco.prepare("SELECT * FROM mfa WHERE usuario_id = ?").get(usuarioId) as Mfa | undefined;
+  return m && { ...m, segredo: decifrar(m.segredo) };
+};
 
 export const mfaAtivo = (usuarioId: string) => linha(usuarioId)?.ativo === 1;
 
@@ -22,7 +26,7 @@ export const mfaAtivo = (usuarioId: string) => linha(usuarioId)?.ativo === 1;
 export function iniciarCadastro(usuarioId: string, email: string) {
   if (mfaAtivo(usuarioId)) return undefined;
   const segredo = new OTPAuth.Secret({ size: 20 }).base32;   // 160 bits
-  banco.prepare("INSERT OR REPLACE INTO mfa VALUES (?, ?, 0, 0)").run(usuarioId, segredo);
+  banco.prepare("INSERT OR REPLACE INTO mfa VALUES (?, ?, 0, 0)").run(usuarioId, cifrar(segredo));
   return { segredo, uri: totp(segredo, email).toString() };   // vira QR code
 }
 

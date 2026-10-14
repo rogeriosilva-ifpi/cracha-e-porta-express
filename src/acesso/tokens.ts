@@ -1,9 +1,11 @@
 // Tokens de acesso para clientes de API (capítulo 6).
 // Assinados com chave privada Ed25519; quem confere usa só a pública.
 import {
-  SignJWT, exportJWK, generateKeyPair, jwtVerify, type JWTPayload,
+  SignJWT, calculateJwkThumbprint, exportJWK, generateKeyPair, importPKCS8,
+  importSPKI, jwtVerify, type JWTPayload,
 } from "jose";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createPrivateKey, createPublicKey, randomBytes, randomUUID } from "node:crypto";
+import { config } from "../compartilhado/config.js";
 
 export const EMISSOR = "https://prontuario.exemplo";
 export const AUDIENCIA = "prontuario-api";
@@ -22,7 +24,20 @@ export async function novaChave() {
                    privada: privateKey, publica: publicKey });
   chaves.splice(2);                            // guarda no máximo duas
 }
-await novaChave();
+/** Chave vinda do ambiente (cap. 13): kid = impressão digital (RFC 7638),
+ *  estável entre reinícios e igual em todas as instâncias. */
+export async function chaveDoPem(pem: string): Promise<Chave> {
+  const spki = createPublicKey(createPrivateKey(pem)).export({ type: "spki", format: "pem" }).toString();
+  const publica = await importSPKI(spki, ALG, { extractable: true });
+  return { kid: await calculateJwkThumbprint(await exportJWK(publica)),
+           privada: await importPKCS8(pem, ALG), publica };
+}
+
+if (config.chavesJwt.length) {
+  for (const pem of config.chavesJwt) chaves.push(await chaveDoPem(pem));
+} else {
+  await novaChave();          // desenvolvimento: chave efêmera, some no reinício
+}
 
 /** Fábrica de emissores: um por audiência e duração. */
 export const emissor = (audiencia: string, duracaoS: number) =>

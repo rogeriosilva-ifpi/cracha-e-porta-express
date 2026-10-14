@@ -3,6 +3,7 @@ import { banco } from "../compartilhado/banco.js";
 import type { Papel } from "../compartilhado/dados.js";
 import argon2 from "argon2";
 import { hashSenha } from "./senhas.js";
+import { cifrar } from "../compartilhado/cofre.js";
 
 export interface Usuario {
   id: string; nome: string; email: string;
@@ -75,7 +76,7 @@ if ((banco.prepare("SELECT COUNT(*) AS n FROM usuarios").get() as { n: number })
     usuarios.criar({ ...u, passwordHash: hash });
   }
   // Eva já usa segundo fator; Ana tem login federado vinculado (cap. 8).
-  banco.prepare("INSERT INTO mfa VALUES ('u5', ?, 1, 0)").run(TOTP_DE_LABORATORIO);
+  banco.prepare("INSERT INTO mfa VALUES ('u5', ?, 1, 0)").run(cifrar(TOTP_DE_LABORATORIO));
   banco.prepare("INSERT INTO identidades_externas VALUES (?, 'ana-no-provedor', 'u2')")
     .run(process.env.OIDC_ISSUER ?? "http://localhost:8080/realms/hospital");
 }

@@ -1,0 +1,6 @@
+# Segredos que vazaram no histórico e JÁ FORAM TROCADOS (capítulo 13).
+# Ignorar aqui sem trocar o segredo é mentir para o portão do CI.
+# digital       variável             trocado em   registro
+91ce6d516226    CHAVE_JWT_ATUAL      2026-10-13   INC-2026-01
+f242cd067545    CHAVE_DADOS          2026-10-13   INC-2026-01
+7f9c406a92d3    OIDC_CLIENT_SECRET   2026-10-13   INC-2026-01

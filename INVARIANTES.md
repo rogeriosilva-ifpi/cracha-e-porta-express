@@ -102,3 +102,15 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
   da sessão, nunca do corpo. *Cap. 12 · prova: ATQ-12.3, 12.6.*
 - **SEC-32** Saída por esquema de quem pede: hash nunca sai; dado
   clínico só para o autor. *Cap. 12 · prova: ATQ-01.13, 12.4.*
+- **SEC-33** Segredo só no ambiente ou no cofre, nunca no código nem no
+  git (`.env*` ignorado, só `.env.exemplo` versionado). Em produção,
+  segredo ausente ou com valor de exemplo impede o servidor de subir.
+  *Cap. 13 · prova: testes de configuração.*
+- **SEC-34** Segredo que vazou é TROCADO; só depois sua impressão digital
+  entra em `.varredura-ignorar`. `varredura.py` lê todo o histórico e
+  roda no CI. *Cap. 13 · prova: varredura com 0 novos.*
+- **SEC-35** Dado sensível recuperável (segredo TOTP) é cifrado com
+  AES-256-GCM e chave fora do banco, com versão para rotação. Chave do
+  JWT vem do ambiente; kid é a impressão digital. Dependências passam
+  por `npm audit` / `pip-audit` e pacote novo é conferido antes de
+  instalar. *Cap. 13 · prova: testes de cifra e auditorias.*
