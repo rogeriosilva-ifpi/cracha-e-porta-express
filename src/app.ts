@@ -10,6 +10,7 @@ import * as prescricoes from "./prescricoes/rotas.js";
 import * as admin from "./admin/rotas.js";
 import * as auth from "./auth/rotas.js";
 import * as oidc from "./auth/oidc.js";
+import * as chaves from "./auth/chaves.js";
 import { config } from "./compartilhado/config.js";
 
 const ORIGENS = config.origens;
@@ -29,6 +30,7 @@ export function criarApp() {
   admin.registrar(app);
   auth.registrar(app);
   oidc.registrar(app);
+  chaves.registrar(app);
 
   // FIM DO PIPELINE: o que não casou é 404; todo erro passa por aqui.
   app.use(rotaInexistente);

@@ -369,3 +369,69 @@ PATCH {{base}}/api/auth/me
 Content-Type: application/json
 
 {"nome": "Carla", "papel": "admin"}
+
+# --- capítulo 15 · chaves de API e agentes --------------------------
+
+### PREPARAÇÃO · Ana cria uma chave só de leitura para o assistente
+# @sessao ana
+# @guarda k1=chave k1id=id
+POST {{base}}/api/auth/chaves
+Content-Type: application/json
+
+{"nome": "assistente (leitura)", "escopos": ["patient:read", "encounter:read"]}
+
+### ATQ-15.1 · chave de leitura cria paciente (fora do escopo)
+# @espera status=403
+POST {{base}}/api/patients
+Authorization: ApiKey {{k1}}
+Content-Type: application/json
+
+{"nome": "Paciente do agente", "cns": "898001112223334", "nascimento": "2000-01-01"}
+
+### ATQ-15.2 · chave cria outra chave para si (escalada)
+# @espera status=403
+POST {{base}}/api/auth/chaves
+Authorization: ApiKey {{k1}}
+Content-Type: application/json
+
+{"nome": "filha", "escopos": ["patient:read"]}
+
+### ATQ-15.3 · recepção delega uma permissão que não tem
+# @espera status=403
+# @sessao carla
+POST {{base}}/api/auth/chaves
+Content-Type: application/json
+
+{"nome": "farmácia", "escopos": ["rx:create"]}
+
+### ATQ-15.4 · listagem devolve a chave ou o hash
+# @espera status=200 contem={{k1id}} sem={{k1}} sem=hash
+# @sessao ana
+GET {{base}}/api/auth/chaves
+
+### ATQ-15.5 · Bruno revoga a chave da Ana
+# @espera status=404
+# @sessao bruno-12
+DELETE {{base}}/api/auth/chaves/{{k1id}}
+
+### PREPARAÇÃO · Ana revoga a própria chave
+# @sessao ana
+DELETE {{base}}/api/auth/chaves/{{k1id}}
+
+### ATQ-15.6 · chave revogada continua valendo
+# @espera status=401
+GET {{base}}/api/patients
+Authorization: ApiKey {{k1}}
+
+### ATQ-15.7 · chave inventada com o prefixo certo
+# @espera status=401
+GET {{base}}/api/patients
+Authorization: ApiKey mp_{{k1id}}_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+### ATQ-15.8 · 401 não diz onde ler como se autenticar
+# @espera status=401 cab=WWW-Authenticate~resource_metadata
+GET {{base}}/api/patients
+
+### ATQ-15.9 · recurso protegido sem metadados (RFC 9728)
+# @espera status=200 contem=authorization_servers contem=scopes_supported
+GET {{base}}/.well-known/oauth-protected-resource

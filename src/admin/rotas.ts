@@ -3,6 +3,7 @@ import { z } from "zod";
 import { exige } from "../acesso/politica.js";
 import { registrar as evento } from "../compartilhado/eventos.js";
 import { revogarTodas } from "../acesso/refresh.js";
+import { revogarChavesDe } from "../acesso/chaves.js";
 import { encerrarTodas } from "../acesso/sessoes.js";
 import { hashSenha, motivoDeRecusa } from "../acesso/senhas.js";
 import { BadRequestError, NotFoundError } from "../compartilhado/erros.js";
@@ -31,19 +32,20 @@ export function registrar(app: Express) {
     res.status(201).json(publico(u));
   });
 
-  // Desligamento: derruba sessões e apps. Função administrativa:
+  // Desligamento: derruba sessões, apps e chaves de API. Função administrativa:
   // permissão declarada, não "o botão só aparece para o admin".
   app.post("/api/admin/users/:id/desligar", exige("user:admin"), (req, res) => {
     const u = usuarios.porId(String(req.params.id));
     if (!u) throw new NotFoundError();
     encerrarTodas(u.id);
     revogarTodas(u.id);
+    revogarChavesDe(u.id);
     evento("usuario_desligado", { usuario: u.id, por: req.usuario!.id });
     res.status(204).end();
   });
 
-  // Troca de papel: permissão declarada; derruba sessões e apps da
-  // pessoa, para nenhum token ou tela antiga carregar o papel velho.
+  // Troca de papel: permissão declarada; derruba sessões, apps e chaves
+  // da pessoa, para nenhum token ou tela antiga carregar o papel velho.
   app.patch("/api/admin/users/:id/papel", exige("user:admin"), (req, res) => {
     const { papel } = z.object({ papel: z.enum(["admin", "profissional", "recepcao"]) })
       .parse(req.body);
@@ -52,6 +54,7 @@ export function registrar(app: Express) {
     usuarios.trocarPapel(u.id, papel);
     encerrarTodas(u.id);
     revogarTodas(u.id);
+    revogarChavesDe(u.id);
     evento("papel_alterado", { usuario: u.id, de: u.papel, para: papel, por: req.usuario!.id });
     res.json(publico(usuarios.porId(u.id)!));
   });

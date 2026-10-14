@@ -69,4 +69,15 @@ banco.exec(`
     usuario_id TEXT NOT NULL,
     PRIMARY KEY (emissor, sub)
   );
+  CREATE TABLE IF NOT EXISTS chaves_api (
+    id         TEXT PRIMARY KEY,     -- o prefixo público: mp_<id>_...
+    hash       TEXT NOT NULL UNIQUE, -- sha256 da chave inteira
+    usuario_id TEXT NOT NULL,        -- a chave age em nome de alguém
+    nome       TEXT NOT NULL,        -- "integração da farmácia"
+    escopos    TEXT NOT NULL,        -- JSON: subconjunto do papel
+    criada_em  INTEGER NOT NULL,
+    expira_em  INTEGER NOT NULL,     -- toda chave vence
+    ultimo_uso INTEGER,
+    revogada   INTEGER NOT NULL DEFAULT 0
+  );
 `);

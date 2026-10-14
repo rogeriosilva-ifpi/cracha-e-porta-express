@@ -33,3 +33,13 @@ sozinha e que moram em `atendimentos/escopo` e `acesso/decisao`:
 - só o autor altera o atendimento (403 para quem vê e não é autor);
 - prescrever: autor, atendimento aberto, de plantão, registro ativo
   (capítulo 10); quem prescreve vem da sessão, nunca do corpo.
+
+Chaves de API (capítulo 15): credencial de máquinas, scripts e agentes.
+
+- formato `mp_<id>_<segredo>`; guardamos só o sha256; a chave aparece
+  uma vez, na criação;
+- escopo = lista explícita das permissões acima, subconjunto do papel
+  de quem cria; sem curinga; validade de 1 a 90 dias;
+- no uso valem as duas coisas: o papel de HOJE e o escopo da chave;
+- chave não gerencia conta (rotas `autenticada`), não cria chave;
+- desligamento e troca de papel revogam as chaves da pessoa.

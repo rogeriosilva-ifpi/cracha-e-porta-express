@@ -6,7 +6,8 @@ uso: python placar.py ataques.http [--base URL] [-v]
 Cada bloco começa com "### ID · descrição" e pode ter uma linha
 "# @espera status=401|404 status!=403 sem=texto contem=texto cab=Nome~texto".
 "# @sessao nome" guarda e reenvia os cookies daquela sessão;
-"# @guarda var=campo" guarda um campo do JSON da resposta em {{var}}.
+"# @guarda var=campo" guarda um campo do JSON da resposta em {{var}},
+que vale também dentro do @espera (ex.: sem={{chave}}).
 Expectativas jwt-* leem o access_token da resposta (sem conferir
 assinatura): jwt-alg=EdDSA, jwt-tem=iss,aud, jwt-sem=email, jwt-ttl<=900.
 Blocos sem @espera são preparação e não contam. O ataque é DEFENDIDO
@@ -67,7 +68,8 @@ def enviar(metodo, url, cab, corpo, sessao=None):
                 jarra.pop(nome, None)
             else:
                 jarra[nome] = valor
-    return status, texto, {"set-cookie": " | ".join(cookies)}
+    cabs = {k.lower(): v for k, v in resp.headers.items()}
+    return status, texto, {**cabs, "set-cookie": " | ".join(cookies)}
 
 def jwt_da_resposta(corpo):
     try:
@@ -128,6 +130,7 @@ def main():
                 GUARDADOS[var] = str(dados.get(campo, ""))
         if espera is None:  # bloco de preparação (login etc.): não conta
             continue
+        espera = [re.sub(r"\{\{(\w+)\}\}", lambda m: GUARDADOS.get(m[1], m[0]), e) for e in espera]
         ok = avaliar(espera, status, corpo, cabs)
         total += 1; defendidos += ok
         esp = next((e.split("=")[1] for e in espera if e.startswith("status=")),

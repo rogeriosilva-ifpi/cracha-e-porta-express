@@ -79,3 +79,10 @@ conferem as dependências.
 
 `bash scripts/portoes.sh` roda tudo o que o CI roda: tipos, testes,
 censo, varredura de segredos, auditoria, ataques e papel × rota.
+
+## Chaves de API e agentes (capítulo 15)
+
+`POST /api/auth/chaves` (logado) cria uma chave com escopo; use-a em
+`Authorization: ApiKey mp_...`. O laboratório `laboratorio/agente`
+mostra o mesmo agente, com a mesma instrução injetada num cadastro,
+sob uma chave larga e uma estreita.

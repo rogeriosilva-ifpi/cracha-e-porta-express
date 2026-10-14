@@ -15,6 +15,7 @@ export const PUBLICAS = new Set([
   "GET /api/auth/oidc/iniciar",
   "GET /api/auth/oidc/callback",
   "GET /.well-known/jwks.json",
+  "GET /.well-known/oauth-protected-resource",
   "POST /api/auth/reset/solicitar",
   "POST /api/auth/reset/confirmar",
 ]);

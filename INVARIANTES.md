@@ -120,3 +120,16 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
 - **SEC-37** Toda correção de segurança chega com o teste negativo que
   falharia sem ela (prova de revert) e, se for HTTP, com um bloco
   ATQ-xx em `ataques.http`. *Cap. 14 · prova: revisão de PR.*
+- **SEC-38** Chave de API: segredo de 256 bits, só o sha256 no banco,
+  exibida uma vez; escopo explícito ⊆ papel de quem cria, sem curinga;
+  validade máxima de 90 dias. *Cap. 15 · prova: ATQ-15.3, 15.4;
+  testes de chaves.*
+- **SEC-39** Pedido com chave passa por papel de hoje E escopo da chave;
+  fora do escopo é 403 com evento `chave_fora_do_escopo`. *Cap. 15 ·
+  prova: ATQ-15.1; teste "o papel de hoje vale".*
+- **SEC-40** Chave não gerencia conta nem cria chave; revogação,
+  vencimento, desligamento e troca de papel matam a chave. *Cap. 15 ·
+  prova: ATQ-15.2, 15.5, 15.6; testes "a chave morre".*
+- **SEC-41** 401 traz `WWW-Authenticate` com `resource_metadata`, e
+  `/.well-known/oauth-protected-resource` descreve emissor e escopos
+  (RFC 9728). *Cap. 15 · prova: ATQ-15.8, 15.9.*

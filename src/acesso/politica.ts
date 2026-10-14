@@ -5,6 +5,7 @@ import type { Usuario } from "./usuarios.js";
 import { ForbiddenError, UnauthorizedError } from "../compartilhado/erros.js";
 import { identificar } from "./identidade.js";
 import { pode, type Permissao } from "./permissoes.js";
+import { registrar as evento } from "../compartilhado/eventos.js";
 
 declare global {
   namespace Express { interface Request { usuario?: Usuario } }
@@ -20,11 +21,13 @@ const marcar = (h: RequestHandler, p: Politica) =>
 
 export const publica = () => marcar((_req, _res, next) => next(), { publica: true });
 
-// Basta estar logado (ex.: logout, "quem sou eu").
+// Basta estar logado (ex.: logout, "quem sou eu"). São funções da
+// própria conta: gente entra, chave de API não (capítulo 15).
 export const autenticada = () =>
   marcar(async (req, _res, next) => {
     const usuario = await identificar(req);
     if (!usuario) throw new UnauthorizedError();
+    if (req.chave) throw new ForbiddenError("Chave de API não gerencia a conta.");
     req.usuario = usuario;
     next();
   }, { autenticada: true });
@@ -35,6 +38,10 @@ export const exige = (permissao: Permissao) =>
     if (!usuario) throw new UnauthorizedError();
     if (!pode(usuario.papel, permissao))                     // portão 2
       throw new ForbiddenError("Permissão insuficiente.");
+    if (req.chave && !req.chave.escopos.includes(permissao)) {   // portão 2b
+      evento("chave_fora_do_escopo", { chave: req.chave.id, permissao });
+      throw new ForbiddenError("Fora do escopo da chave.");
+    }
     req.usuario = usuario;
     next();
   }, { permissao });
