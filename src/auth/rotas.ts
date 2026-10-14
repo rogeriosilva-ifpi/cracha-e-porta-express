@@ -147,6 +147,12 @@ export function registrar(app: Express) {
     res.json({ usuario: publico(req.usuario!) });
   });
 
+  // Editar o próprio perfil. VERSÃO INGÊNUA (cap12-antes).
+  app.patch("/api/auth/me", autenticada(), (req, res) => {
+    usuarios.atualizar(req.usuario!.id, req.body);
+    res.json({ usuario: publico(usuarios.porId(req.usuario!.id)!) });
+  });
+
   app.post("/api/auth/reset/solicitar", publica(), porIp, (req, res) => {
     const { email } = z.object({ email: z.string().max(254) }).parse(req.body);
     const u = usuarios.porEmail(email);

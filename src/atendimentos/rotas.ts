@@ -10,6 +10,11 @@ const Alteracao = z.object({
 });
 
 export function registrar(app: Express) {
+  // VERSÃO INGÊNUA (cap12-antes): devolve todos; "o front filtra".
+  app.get("/api/encounters", exige("encounter:read"), (_req, res) => {
+    res.json(db.atendimentos);
+  });
+
   app.get("/api/encounters/:id", exige("encounter:read"), (req, res) => {
     const e = db.atendimentos.find((x) => x.id === req.params.id);
     if (!e) throw new NotFoundError();

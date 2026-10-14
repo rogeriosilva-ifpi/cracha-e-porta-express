@@ -96,7 +96,7 @@ GET {{base}}/api/admin/users
 X-Usuario-Demo: admin@hospital.dev
 
 ### ATQ-01.12 · Bruno lê o atendimento de Ana
-# @espera status=403|404
+# @espera status=404
 # @sessao bruno
 GET {{base}}/api/encounters/e1
 
@@ -318,3 +318,54 @@ GET {{base}}/api/auth/oidc/callback?code=qualquer
 # @espera status=403
 # @sessao carla
 POST {{base}}/api/admin/users/u3/desligar
+
+# --- capítulo 12 · o dono do objeto ---------------------------------
+
+### PREPARAÇÃO · Bruno entra de novo (ele saiu de todos no capítulo 7)
+# @sessao bruno-12
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"email": "bruno@hospital.dev", "senha": "barco-azul-no-delta"}
+
+### ATQ-12.1 · Bruno altera o atendimento da Ana trocando o id
+# @espera status=404
+# @sessao bruno-12
+PATCH {{base}}/api/encounters/e1
+Content-Type: application/json
+
+{"motivo": "alterado pelo Bruno"}
+
+### ATQ-12.2 · Bruno prescreve no atendimento da Ana
+# @espera status=403|404
+# @sessao bruno-12
+POST {{base}}/api/encounters/e1/medication-requests
+Content-Type: application/json
+
+{"medicamento": "Morfina 10 mg", "posologia": "se dor", "profissionalId": "u3"}
+
+### ATQ-12.3 · Ana prescreve em nome do Bruno (profissionalId no corpo)
+# @espera status=400|403 sem=u3
+# @sessao ana
+POST {{base}}/api/encounters/e1/medication-requests
+Content-Type: application/json
+
+{"medicamento": "AAS 100 mg", "posologia": "1x ao dia", "profissionalId": "u3"}
+
+### ATQ-12.4 · recepção lê o motivo clínico do atendimento
+# @espera status=200 sem=motivo
+# @sessao carla
+GET {{base}}/api/encounters/e1
+
+### ATQ-12.5 · Bruno lista os atendimentos e recebe os da Ana
+# @espera status=200 sem="e1"
+# @sessao bruno-12
+GET {{base}}/api/encounters
+
+### ATQ-12.6 · recepção se promove a admin editando o próprio perfil
+# @espera status=400
+# @sessao carla
+PATCH {{base}}/api/auth/me
+Content-Type: application/json
+
+{"nome": "Carla", "papel": "admin"}
