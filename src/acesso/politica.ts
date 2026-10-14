@@ -38,8 +38,9 @@ export const exige = (permissao: Permissao) =>
     if (!usuario) throw new UnauthorizedError();
     if (!pode(usuario.papel, permissao))                     // portão 2
       throw new ForbiddenError("Permissão insuficiente.");
-    if (req.chave && !req.chave.escopos.includes(permissao)) {   // portão 2b
-      evento("chave_fora_do_escopo", { chave: req.chave.id, permissao });
+    const k = req.chave;                                 // veio por chave?
+    if (k && !k.escopos.includes(permissao)) {           // portão 2b
+      evento("chave_fora_do_escopo", { chave: k.id, permissao });
       throw new ForbiddenError("Fora do escopo da chave.");
     }
     req.usuario = usuario;

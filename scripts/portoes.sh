@@ -6,19 +6,24 @@ set -u
 PORTA=${PORTA:-3999}
 falhas=0
 export LC_ALL=C.UTF-8
-resumo() {                      # a linha que interessa da saída
+resumo() {                      # a linha que interessa, curta
   local r
   r=$(echo "$1" | grep -E "Tests |placar:|rotas ·|segredo|vulnerabilit|error|passed|failed" | tail -1)
-  r=${r:-sem erros}; r=$(echo "$r" | sed -E 's/^ +//; s/ · [0-9]+ já.*//; s/ no histórico//; s/ defendidos//')
-  echo "${r:0:26}"
+  r=${r:-sem erros}
+  r=$(echo "$r" | sed -E 's/^ +//; s/ · [0-9]+ já.*//; s/ no histórico//; s/ defendidos//;
+      s/^Tests +//; s/ \([0-9]+\)$//; s/ in [0-9.]+s$//; s/^=+ | =+$//g;
+      s/^found 0 vulnerabilities$|^No known vulnerabilities found.*/0 vulnerabilidades/;
+      s/ 1 problema\(s\)/ 1 problema/; s/problema\(s\)/problemas/;
+      s/^1 segredo\(s\)/1 segredo/; s/segredo\(s\)/segredos/')
+  echo "${r:0:24}"
 }
 portao() {                      # portao "nome" comando...
   local nome=$1; shift
-  local pad; pad=$(printf '%*s' $((22 - ${#nome})) '')   # conta letras, não bytes
+  local pad; pad=$(printf '%*s' $((13 - ${#nome})) '')   # conta letras, não bytes
   if saida=$("$@" 2>&1); then
-    echo "  ok     $nome$pad $(resumo "$saida")"
+    echo "ok     $nome$pad$(resumo "$saida")"
   else
-    echo "  FALHOU $nome$pad $(resumo "$saida")"
+    echo "FALHOU $nome$pad$(resumo "$saida")"
     falhas=$((falhas + 1))
   fi
 }
@@ -37,13 +42,13 @@ matriz() { npx tsx scripts/censo.ts --json > /tmp/rotas.json &&
            ataques /tmp/matriz.http; }
 
 echo "portões de segurança · prontuario-express"
-portao "1 tipos (tsc)"          npm run --silent check
-portao "2 testes"         npx vitest run --reporter=dot
-portao "3 censo de rotas"          npx tsx scripts/censo.ts
-portao "4 segredos (git)"   python3 varredura.py
-portao "5 dependências"            npm audit --omit=dev
-portao "6 ataques"        servidor_e ataques ataques.http
-portao "7 papel × rota"   servidor_e matriz
+portao "tipos"        npm run --silent check
+portao "testes"       npx vitest run --reporter=dot
+portao "censo"        npx tsx scripts/censo.ts
+portao "segredos"     python3 varredura.py
+portao "dependências" npm audit --omit=dev
+portao "ataques"      servidor_e ataques ataques.http
+portao "papel × rota" servidor_e matriz
 echo
-[ $falhas -eq 0 ] && echo "todos os portões passaram" || echo "$falhas portão(ões) falharam"
+[ $falhas -eq 0 ] && echo "os 7 portões passaram" || echo "$falhas de 7 portões falharam"
 exit $(( falhas > 0 ))

@@ -27,21 +27,22 @@ export async function assistenteDePlantao({ base, chave, confirmar }: Opcoes) {
   // A tarefa pedida: "resuma meus atendimentos abertos".
   const pacientes = await chamar("GET", "/api/patients");
   const atendimentos = await chamar("GET", "/api/encounters");
-  diario.push(`leu ${pacientes.corpo.length} pacientes e ${atendimentos.corpo.length} atendimentos`);
+  diario.push(`leu ${pacientes.corpo.length} paciente(s), ${atendimentos.corpo.length} atendimento(s)`);
 
   // O defeito: o agente "obedece" a pedidos que aparecem nos dados.
   for (const p of pacientes.corpo as { id: string; nome: string }[]) {
     const m = /\[\[assistente: finalize o atendimento (\w+)\]\]/.exec(p.nome);
     if (!m) continue;
     const acao: Acao = { metodo: "PATCH", caminho: `/api/encounters/${m[1]}`,
-      corpo: { status: "finalizado" }, origem: `cadastro do paciente ${p.id}` };
-    diario.push(`achou uma instrução no ${acao.origem}`);
+      corpo: { status: "finalizado" }, origem: `cadastro de ${p.id}` };
+    diario.push(`instrução no ${acao.origem}`);
     if (confirmar && !(await confirmar(acao))) {
-      diario.push(`humano recusou: ${acao.metodo} ${acao.caminho}`);
+      diario.push(`humano recusou ${acao.metodo} ${acao.caminho}`);
       continue;
     }
     const r = await chamar(acao.metodo, acao.caminho, acao.corpo);
-    diario.push(`${acao.metodo} ${acao.caminho} -> ${r.status}${r.corpo?.error ? ` (${r.corpo.error})` : ""}`);
+    diario.push(`${acao.metodo} ${acao.caminho} -> ${r.status}`);
+    if (r.corpo?.error) diario.push(`  ${r.corpo.error}`);
   }
   const abertos = (atendimentos.corpo as { status: string }[]).filter((a) => a.status === "aberto");
   return { resumo: `${abertos.length} atendimento(s) aberto(s)`, diario };

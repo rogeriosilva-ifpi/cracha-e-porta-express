@@ -1,6 +1,6 @@
 # Capítulo 14 · Testar acesso como um atacante — prompts complementares
 
-## Agente · versão FastAPI
+## Agente · versão Express
 
 ```
 Goal
@@ -9,17 +9,19 @@ Os portões de segurança rodando no CI: scripts/portoes.sh e
 
 Context
 @scripts/ @tests/ @ataques.http @docs/PERMISSOES.md @INVARIANTES.md
+Express 5 + TS, vitest, npm.
 
 Constraints
-- portões: compilação, pytest, censo, varredura, pip-audit,
-  placar de ataques.http e de matriz.http
+- portões: tsc --noEmit, vitest, censo, varredura, npm audit
+  --omit=dev, placar de ataques.http e de matriz.http
 - cada portão mostra uma linha de resumo; qualquer falha = exit 1
 - o servidor de teste sobe numa porta própria e cai no fim (grupo)
-- checkout com fetch-depth 0; uv sync --locked
+- checkout com fetch-depth 0; npm ci
+- proibido: skip, || true, continue-on-error
 
 Done when
 - bash scripts/portoes.sh: todos ok localmente
-- um portão quebrado de propósito deixa o script vermelho
+- uma política trocada de propósito deixa o script vermelho
 ```
 
 ## Chat · C-P-T-R-F-A
