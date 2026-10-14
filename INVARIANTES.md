@@ -133,3 +133,6 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
 - **SEC-41** 401 traz `WWW-Authenticate` com `resource_metadata`, e
   `/.well-known/oauth-protected-resource` descreve emissor e escopos
   (RFC 9728). *Cap. 15 · prova: ATQ-15.8, 15.9.*
+- **SEC-42** Competência declarada na régua só vale com evidência que
+  existe no repositório; `python regua.py` confere. *Cap. 16 · prova:
+  REGUA.md.*

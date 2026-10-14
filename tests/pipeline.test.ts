@@ -43,4 +43,11 @@ describe("pipeline do capítulo 3", () => {
     const r = await request(app).get("/health");
     expect(r.headers["x-powered-by"]).toBeUndefined();
   });
+  it("CORS: origem da lista recebe a própria origem; outra não recebe nada", async () => {
+    const ok = await request(app).get("/health").set("Origin", "http://localhost:5173");
+    expect(ok.headers["access-control-allow-origin"]).toBe("http://localhost:5173");
+    expect(ok.headers["access-control-allow-credentials"]).toBe("true");
+    const outro = await request(app).get("/health").set("Origin", "https://site-qualquer.example");
+    expect(outro.headers["access-control-allow-origin"]).toBeUndefined();
+  });
 });

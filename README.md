@@ -86,3 +86,9 @@ censo, varredura de segredos, auditoria, ataques e papel × rota.
 `Authorization: ApiKey mp_...`. O laboratório `laboratorio/agente`
 mostra o mesmo agente, com a mesma instrução injetada num cadastro,
 sob uma chave larga e uma estreita.
+
+## A régua do sênior (capítulo 16)
+
+`python regua.py` confere o `REGUA.md`: cada competência marcada precisa
+de evidência que existe (ataque, teste, arquivo). `REGUA.modelo.md` é a
+régua em branco para o seu projeto; as decisões ficam em `docs/DECISOES.md`.
