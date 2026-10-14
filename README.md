@@ -61,3 +61,9 @@ OpenFGA de `politicas/` rodam com Docker; veja `politicas/README.md`.
 python matriz.py rotas.json docs/PERMISSOES.md > matriz.http   # ver matriz.py
 python placar.py matriz.http                                   # papel × rota
 ```
+
+## O dono do objeto (capítulo 12)
+
+Atendimentos e prescrições são buscados dentro do escopo de quem pede
+(`atendimentos/escopo`): o que não se vê responde 404. A prescrição usa
+a regra ABAC do capítulo 10 com o relógio real: fora do plantão, 403.

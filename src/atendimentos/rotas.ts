@@ -1,30 +1,32 @@
 import type { Express } from "express";
 import { z } from "zod";
-import { db } from "../compartilhado/dados.js";
 import { exige } from "../acesso/politica.js";
-import { NotFoundError } from "../compartilhado/erros.js";
+import { ForbiddenError } from "../compartilhado/erros.js";
+import { buscarVisivel, saida, visiveis } from "./escopo.js";
 
+// Só estes campos; qualquer outro no corpo é 400 (atribuição em massa).
 const Alteracao = z.object({
   motivo: z.string().min(3).optional(),
   status: z.enum(["aberto", "finalizado"]).optional(),
-});
+}).strict();
 
 export function registrar(app: Express) {
-  // VERSÃO INGÊNUA (cap12-antes): devolve todos; "o front filtra".
-  app.get("/api/encounters", exige("encounter:read"), (_req, res) => {
-    res.json(db.atendimentos);
+  app.get("/api/encounters", exige("encounter:read"), (req, res) => {
+    const u = req.usuario!;
+    res.json(visiveis(u).map((a) => saida(u, a)));
   });
 
   app.get("/api/encounters/:id", exige("encounter:read"), (req, res) => {
-    const e = db.atendimentos.find((x) => x.id === req.params.id);
-    if (!e) throw new NotFoundError();
-    res.json(e);
+    const u = req.usuario!;
+    res.json(saida(u, buscarVisivel(u, String(req.params.id))));
   });
 
   app.patch("/api/encounters/:id", exige("encounter:update"), (req, res) => {
-    const e = db.atendimentos.find((x) => x.id === req.params.id);
-    if (!e) throw new NotFoundError();
-    Object.assign(e, Alteracao.parse(req.body));
-    res.json(e);
+    const u = req.usuario!;
+    const a = buscarVisivel(u, String(req.params.id));   // 404 se não vê
+    if (a.profissionalId !== u.id)                       // vê, mas não é seu
+      throw new ForbiddenError("Só o autor altera o atendimento.");
+    Object.assign(a, Alteracao.parse(req.body));
+    res.json(a);
   });
 }

@@ -18,7 +18,7 @@ const NovoUsuario = z.object({
 
 export function registrar(app: Express) {
   app.get("/api/admin/users", exige("user:admin"), (_req, res) => {
-    res.json(usuarios.listar());
+    res.json(usuarios.listar().map(publico));   // nunca o hash
   });
 
   app.post("/api/admin/users", exige("user:admin"), async (req, res) => {
@@ -28,7 +28,7 @@ export function registrar(app: Express) {
     const u = usuarios.criar({
       id: novoId("u"), ...dados, passwordHash: await hashSenha(senha),
     });
-    res.status(201).json(u);
+    res.status(201).json(publico(u));
   });
 
   // Desligamento: derruba sessões e apps. Função administrativa:

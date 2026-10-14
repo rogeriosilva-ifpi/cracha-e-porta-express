@@ -93,3 +93,12 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
   permissão recebe 403. *Cap. 11 · prova: matriz 36/36.*
 - **SEC-29** Troca de papel e desligamento derrubam sessões e apps da
   pessoa e geram evento. *Cap. 11 · prova: testes de funções admin.*
+- **SEC-30** Objeto se busca DENTRO do escopo de quem pede (consulta
+  escopada); o que a pessoa não pode ver responde 404, igual ao que não
+  existe. Lista nunca "busca tudo e o front filtra".
+  *Cap. 12 · prova: ATQ-01.12, 12.1, 12.2, 12.5.*
+- **SEC-31** Entrada por lista de campos permitidos (`.strict()` /
+  `extra="forbid"`): campo a mais é 400. Identidade, dono e papel vêm
+  da sessão, nunca do corpo. *Cap. 12 · prova: ATQ-12.3, 12.6.*
+- **SEC-32** Saída por esquema de quem pede: hash nunca sai; dado
+  clínico só para o autor. *Cap. 12 · prova: ATQ-01.13, 12.4.*

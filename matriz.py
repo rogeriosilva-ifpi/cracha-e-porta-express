@@ -7,8 +7,9 @@ uso: npx tsx scripts/censo.ts --json > rotas.json        (Express)
      python placar.py matriz.http
 
 Para cada rota que exige uma permissão e cada papel: se a matriz dá a
-permissão, o papel NÃO pode receber 401/403; se não dá, TEM de receber
-403. Nenhuma combinação fica sem teste, e a suíte acompanha a matriz.
+permissão, o papel não pode ser barrado no portão 2 (nem 401, nem a
+recusa "Permissão insuficiente."); se não dá, TEM de receber essa
+recusa. O portão 3 (regras do objeto, cap. 12) tem testes próprios.
 """
 import json, re, sys
 
@@ -56,7 +57,8 @@ def main():
                 continue
             n += 1
             pode = papel in regras.get(perm, set())
-            espera = "status!=401|403" if pode else "status=403"
+            espera = ("status!=401 sem=Permissão" if pode
+                      else "status=403 contem=Permissão")
             print(f"### MTZ-{n:02d} · {papel} {'pode' if pode else 'não pode'} {r['metodo']} {r['caminho']} ({perm})")
             print(f"# @espera {espera}\n# @sessao m-{papel}")
             print(f"{r['metodo']} {{{{base}}}}{caminho_de_exemplo(r['caminho'])}")

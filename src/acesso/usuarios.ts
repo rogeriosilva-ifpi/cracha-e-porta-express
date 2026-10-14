@@ -34,12 +34,8 @@ export const usuarios = {
       .run(u.id, u.nome, u.email.toLowerCase(), u.papel, u.passwordHash);
     return u;
   },
-  /** VERSÃO INGÊNUA (cap12-antes): grava o que vier. */
-  atualizar(id: string, dados: Record<string, unknown>) {
-    const atual = usuarios.porId(id)!;
-    const novo = { ...atual, ...dados } as Usuario;
-    banco.prepare("UPDATE usuarios SET nome = ?, email = ?, papel = ? WHERE id = ?")
-      .run(novo.nome, novo.email, novo.papel, id);
+  trocarNome(id: string, nome: string) {
+    banco.prepare("UPDATE usuarios SET nome = ? WHERE id = ?").run(nome, id);
   },
   trocarPapel(id: string, papel: Papel) {
     banco.prepare("UPDATE usuarios SET papel = ? WHERE id = ?").run(papel, id);

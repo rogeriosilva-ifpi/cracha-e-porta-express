@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 export type Evento =
   | "login_ok" | "login_falhou" | "conta_limitada" | "mfa_falhou"
   | "refresh_reutilizado" | "senha_redefinida" | "saiu_de_todos"
-  | "usuario_desligado" | "papel_alterado";
+  | "usuario_desligado" | "papel_alterado" | "acesso_negado";
 
 type Dados = { usuario?: string; conta?: string; ip?: string; [k: string]: unknown };
 let saida = (linha: string) => console.info(linha);

@@ -147,9 +147,10 @@ export function registrar(app: Express) {
     res.json({ usuario: publico(req.usuario!) });
   });
 
-  // Editar o próprio perfil. VERSÃO INGÊNUA (cap12-antes).
+  // Editar o próprio perfil: só o nome. Papel e e-mail têm fluxos próprios.
   app.patch("/api/auth/me", autenticada(), (req, res) => {
-    usuarios.atualizar(req.usuario!.id, req.body);
+    const { nome } = z.object({ nome: z.string().min(2).max(100) }).strict().parse(req.body);
+    usuarios.trocarNome(req.usuario!.id, nome);
     res.json({ usuario: publico(usuarios.porId(req.usuario!.id)!) });
   });
 

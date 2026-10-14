@@ -9,6 +9,7 @@ muda lá, no mesmo commit.
 | `patient:read`     |  ✅   |      ✅      |    ✅    |
 | `patient:create`   |  ✅   |      ✅      |    ✅    |
 | `encounter:read`   |  ✅   |      ✅      |    ✅    |
+| `encounter:read_any` | ✅  |      ❌      |    ✅    |
 | `encounter:update` |  ✅   |      ✅      |    ❌    |
 | `rx:read`          |  ✅   |      ✅      |    ❌    |
 | `rx:create`        |  ❌   |      ✅      |    ❌    |
@@ -22,6 +23,13 @@ Regras de uso (capítulo 11):
   teste para cada papel × rota; rode depois de mudar qualquer linha;
 - troca de papel derruba as sessões e os apps da pessoa.
 
-Regra de domínio (portão 3, capítulo 12): o profissional só prescreve
-no atendimento que ele mesmo registrou. Nenhuma linha desta tabela
-expressa isso — e é por isso que ela não basta.
+Regras de objeto (portão 3, capítulo 12), que esta tabela não expressa
+sozinha e que moram em `atendimentos/escopo` e `acesso/decisao`:
+
+- sem `encounter:read_any`, a pessoa vê só os atendimentos que registrou;
+  o que não vê responde 404, como se não existisse;
+- dado clínico (motivo) só para o autor do atendimento; os outros
+  recebem o resumo;
+- só o autor altera o atendimento (403 para quem vê e não é autor);
+- prescrever: autor, atendimento aberto, de plantão, registro ativo
+  (capítulo 10); quem prescreve vem da sessão, nunca do corpo.

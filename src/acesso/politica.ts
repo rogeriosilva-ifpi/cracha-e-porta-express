@@ -33,7 +33,8 @@ export const exige = (permissao: Permissao) =>
   marcar(async (req, _res, next) => {
     const usuario = await identificar(req);                       // portão 1
     if (!usuario) throw new UnauthorizedError();
-    if (!pode(usuario.papel, permissao)) throw new ForbiddenError(); // portão 2
+    if (!pode(usuario.papel, permissao))                     // portão 2
+      throw new ForbiddenError("Permissão insuficiente.");
     req.usuario = usuario;
     next();
   }, { permissao });

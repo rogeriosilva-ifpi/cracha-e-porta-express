@@ -6,7 +6,7 @@ import {
 import type { Papel } from "../compartilhado/dados.js";
 import { MATRIZ, type Permissao } from "./permissoes.js";
 
-export type Acao = "read" | "create" | "update" | "manage" | "prescrever";
+export type Acao = "read" | "read_any" | "create" | "update" | "manage" | "prescrever";
 export type Assunto = "Paciente" | "Atendimento" | "Prescricao" | "Usuario";
 export type Habilidades = MongoAbility<[Acao, Assunto | object]>;
 
@@ -15,6 +15,7 @@ export const TRADUCAO: Record<Permissao, [Acao, Assunto]> = {
   "patient:read": ["read", "Paciente"],
   "patient:create": ["create", "Paciente"],
   "encounter:read": ["read", "Atendimento"],
+  "encounter:read_any": ["read_any", "Atendimento"],
   "encounter:update": ["update", "Atendimento"],
   "rx:read": ["read", "Prescricao"],
   "rx:create": ["create", "Prescricao"],
