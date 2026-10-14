@@ -74,3 +74,8 @@ Copie `.env.exemplo` para `.env` e preencha com segredos reais (em
 produção, o servidor recusa os valores de exemplo). `python varredura.py`
 procura segredos em todo o histórico do git; `npm audit` / `pip-audit`
 conferem as dependências.
+
+## Portões de segurança (capítulo 14)
+
+`bash scripts/portoes.sh` roda tudo o que o CI roda: tipos, testes,
+censo, varredura de segredos, auditoria, ataques e papel × rota.

@@ -114,3 +114,9 @@ agente. Cada linha tem o capítulo que a criou e o teste que a prova.
   JWT vem do ambiente; kid é a impressão digital. Dependências passam
   por `npm audit` / `pip-audit` e pacote novo é conferido antes de
   instalar. *Cap. 13 · prova: testes de cifra e auditorias.*
+- **SEC-36** `scripts/portoes.sh` roda no CI em todo push e PR: tipos,
+  testes, censo, varredura, auditoria, ataques e papel × rota. Nenhum
+  merge com portão vermelho. *Cap. 14 · prova: workflow seguranca.yml.*
+- **SEC-37** Toda correção de segurança chega com o teste negativo que
+  falharia sem ela (prova de revert) e, se for HTTP, com um bloco
+  ATQ-xx em `ataques.http`. *Cap. 14 · prova: revisão de PR.*

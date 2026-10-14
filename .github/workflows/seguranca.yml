@@ -1,0 +1,19 @@
+# Portões de segurança em todo push e PR (capítulo 14).
+name: seguranca
+on: [push, pull_request]
+jobs:
+  portoes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # a varredura lê o histórico inteiro
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"  # placar, matriz e varredura
+      - run: npm ci               # exatamente o package-lock revisado
+      - run: bash scripts/portoes.sh
