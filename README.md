@@ -2,6 +2,18 @@
 
 Laboratório do ebook **Crachá & Porta** — stack Express 5 + TypeScript.
 
+- Livro (site): https://rogeriosilva-ifpi.github.io/cracha-e-porta-ebook/
+- Livro, PDF e instrumentos: https://github.com/rogeriosilva-ifpi/cracha-e-porta-ebook
+- A mesma aplicação na outra stack: https://github.com/rogeriosilva-ifpi/cracha-e-porta-fastapi
+
+O livro chama esta pasta de `prontuario-express`. Clone com esse nome:
+`git clone https://github.com/rogeriosilva-ifpi/cracha-e-porta-express prontuario-express`
+
+> Os ataques de `ataques.http` existem para provar defesas neste laboratório.
+> Não os rode contra sistemas de terceiros. As senhas, chaves e o segredo TOTP
+> que aparecem no código e no histórico (inclusive o `.env.producao` do
+> capítulo 13) são de laboratório, publicados de propósito; nunca os use fora daqui.
+
 Cada capítulo é uma tag: `git checkout cap01`, `git checkout cap02`…
 
 ```bash
